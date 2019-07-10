@@ -37,6 +37,9 @@ def list_headers(json, headers, indent = 0):
 				if isinstance(val, dict):
 					list_headers(val, headers, indent + 1)
 
+'''
+	Create list of values
+'''
 def dump_values(json):
 	values = []
 
