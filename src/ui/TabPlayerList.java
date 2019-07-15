@@ -44,7 +44,7 @@ public class TabPlayerList extends Tab {
 		root.setCenter(grid);
 
 		setOnSelectionChanged(E -> {
-			playerList.getSelectionModel().select(playerList.getSelectionModel().getSelectedIndex());
+			createSecondaryContent(grid, players.getValue().get(playerList.getSelectionModel().getSelectedIndex()));
 		});
 
 		return root;
@@ -90,7 +90,7 @@ public class TabPlayerList extends Tab {
 		FX.row(root, null, 5);
 		FX.row(root, null, 5);
 
-		root.add(FX.label(String.format("%s\t(%d)", p.Name, p.Level), 25), 0, 0, 11, 1);
+		root.add(FX.label(String.format("%s (%d)", p.Name, p.Level), 25), 0, 0, 11, 1);
 		root.add(FX.label(p.Guild != null ? p.Guild : "", 16), 0, 1, 11, 1);
 		root.add(FX.bar(1.0 * p.XP / p.XPNext, String.format("%s out of %s XP left to next level", FX.formatl(p.XPNext - p.XP), FX.formatl(p.XPNext))), 1, 2, 9, 1);
 
@@ -111,7 +111,7 @@ public class TabPlayerList extends Tab {
 		root.add(FX.label("Rank"), 2, 11);
 		root.add(FX.label("Honor"), 3, 11);
 
-		if (p.Guild != null) {
+		if (p.GuildRole != null) {
 			root.add(l3, 1, 15, 4, 1);
 			root.add(FX.label("Position"), 1, 16);
 			root.add(FX.label("Treasure"), 1, 18);
@@ -169,7 +169,7 @@ public class TabPlayerList extends Tab {
 		root.add(FX.label(p.HonorPlayer.toString()), 3, 12);
 		root.add(FX.label(p.HonorFortress.toString()), 3, 13);
 
-		if (p.Guild != null) {
+		if (p.GuildRole != null) {
 			root.add(FX.label(p.GuildRole), 2, 16);
 			root.add(FX.label(p.GuildTreasure.toString()), 2, 18);
 			root.add(FX.label(p.GuildInstructor.toString()), 2, 19);
