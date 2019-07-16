@@ -37,12 +37,38 @@ public class FX {
 
 		g.getColumnConstraints().add(col);
 	}
+	
+	public static void cola(GridPane g, HPos a, Number wid) {
+		ColumnConstraints col = new ColumnConstraints();
+		col.setPrefWidth(wid.doubleValue());
+		col.setMinWidth(wid.doubleValue());
+		col.setMaxWidth(wid.doubleValue());
+		
+		if (a != null) {
+			col.setHalignment(a);
+		}
+
+		g.getColumnConstraints().add(col);
+	}
 
 	public static void clean(GridPane g) {
 		g.getColumnConstraints().clear();
 		g.getRowConstraints().clear();
 	}
+	
+	public static void rowa(GridPane g, VPos a, Number wid) {
+		RowConstraints row = new RowConstraints();
+		row.setPrefHeight(wid.doubleValue());
+		row.setMinHeight(wid.doubleValue());
+		row.setMaxHeight(wid.doubleValue());
 
+		if (a != null) {
+			row.setValignment(a);
+		}
+
+		g.getRowConstraints().add(row);
+	}
+	
 	public static void row(GridPane g, VPos a, Number wid) {
 		RowConstraints row = new RowConstraints();
 		row.setPercentHeight(wid.doubleValue());
@@ -110,6 +136,13 @@ public class FX {
 		return label;
 	}
 
+	public static Label labelb(String text) {
+		Label label = new Label(text);
+		label.setFont(Font.font(null, FontWeight.BOLD, -1));
+
+		return label;
+	}
+	
 	public static Label label(String text, Number s) {
 		Label label = new Label(text);
 		label.setFont(Font.font(s.doubleValue()));
@@ -137,21 +170,13 @@ public class FX {
 		Label label = new Label(value.toString());
 
 		if (value < low) {
-			label.setStyle("text_color: orange;");
+			label.setStyle("text_color: #FB4A2D;");
 		} else if (value < mid) {
-			label.setStyle("text_color: yellow;");
+			label.setStyle("text_color: #FFE943;");
 		} else {
-			label.setStyle("text_color: green;");
+			label.setStyle("text_color: #70AD47;");
 		}
 
-		return label;
-	}
-
-	public static Label glow(Long value, boolean glow) {
-		Label label = new Label(value.toString());
-		if (glow) {
-			label.setStyle("text_color: yellow;");
-		}
 		return label;
 	}
 
@@ -159,11 +184,11 @@ public class FX {
 		ProgressBar progressBar = new ProgressBar(progress);
 
 		if (progress < low) {
-			progressBar.setStyle("accent_color: orange;");
+			progressBar.setStyle("accent_color: #FB4A2D;");
 		} else if (progress < mid) {
-			progressBar.setStyle("accent_color: yellow;");
+			progressBar.setStyle("accent_color: #FFE943;");
 		} else {
-			progressBar.setStyle("accent_color: green;");
+			progressBar.setStyle("accent_color: #70AD47;");
 		}
 
 		return progressBar;

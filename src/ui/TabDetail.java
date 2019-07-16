@@ -9,34 +9,39 @@ import javafx.geometry.HPos;
 import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
-import javafx.util.Pair;
+import sf.DataManager;
 import sf.Player;
 import ui.util.FX;
+import ui.util.PlayerSnapshot;
 import util.Data;
 
-public class TabPlayerList extends Tab {
+public class TabDetail extends Tab {
 
-	public TabPlayerList(Pair<String, List<Player>> players) {
-		setText(String.format("List %s", players.getKey()));
-		setClosable(false);
-		setContent(createContent(players));
+	public TabDetail(String name, List<Player> players) {
+		setText(String.format("List %s", name));
+		setClosable(true);
+		setContent(createContent(name, players));
 	}
 
-	private Node createContent(Pair<String, List<Player>> players) {
+	private Node createContent(String name, List<Player> players) {
 		BorderPane root = new BorderPane();
 		GridPane grid = new GridPane();
 
 		ListView<String> playerList = new ListView<>();
-		playerList.setItems(FXCollections.observableArrayList(players.getValue().stream().map(P -> P.Name).collect(Collectors.toList())));
+		playerList.setItems(FXCollections.observableArrayList(players.stream().map(P -> P.Name).collect(Collectors.toList())));
 		playerList.setOrientation(Orientation.VERTICAL);
 		playerList.getSelectionModel().selectedIndexProperty().addListener((property, o, n) -> {
-			createSecondaryContent(grid, players.getValue().get(n.intValue()));
+			createSecondaryContent(grid, players.get(n.intValue()));
 		});
 		playerList.getSelectionModel().selectFirst();
 
@@ -44,8 +49,24 @@ public class TabPlayerList extends Tab {
 		root.setCenter(grid);
 
 		setOnSelectionChanged(E -> {
-			createSecondaryContent(grid, players.getValue().get(playerList.getSelectionModel().getSelectedIndex()));
+			createSecondaryContent(grid, players.get(playerList.getSelectionModel().getSelectedIndex()));
 		});
+
+		{
+			MenuItem b0 = new MenuItem("Any");
+			MenuItem b1 = new MenuItem("Group members");
+			MenuItem b2 = new SeparatorMenuItem();
+			MenuItem b3 = new MenuItem("Remove");
+
+			Menu b01 = new Menu("Save as image");
+			b01.getItems().addAll(b0, b1);
+		
+			b0.setOnAction(E -> PlayerSnapshot.save(players, false));
+			b1.setOnAction(E -> PlayerSnapshot.save(players, true));
+			b3.setOnAction(E -> DataManager.getInstance().remove(name));
+
+			setContextMenu(new ContextMenu(b01, b2, b3));
+		}
 
 		return root;
 	}

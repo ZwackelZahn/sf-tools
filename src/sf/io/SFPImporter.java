@@ -5,33 +5,34 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Stack;
+import java.util.Map;
 
-import javafx.util.Pair;
 import sf.Player;
 
 public class SFPImporter {
 
-	public static List<Pair<String, List<Player>>> importSFP(File file) throws IOException, ClassNotFoundException {
-		Stack<Pair<String, List<Player>>> players = new Stack<>();
+	public static Map<String, List<Player>> importSFP(File file) throws IOException, ClassNotFoundException {
+		Map<String, List<Player>> players = new HashMap<>();
 
-		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-			Long length = ois.readLong();
+		try (FileInputStream fis = new FileInputStream(file); ObjectInputStream ois = new ObjectInputStream(fis)) {
+			int mapSize = ois.readInt();
 
-			for (int i = 0; i < length; i++) {
-				Long len = ois.readLong();
-				String label = (String) ois.readObject();
+			for (int i = 0; i < mapSize; i++) {
+				int listSize = ois.readInt();
+				String listName = ois.readObject().toString();
 
-				players.push(new Pair<>(label, new ArrayList<>()));
-
-				for (int j = 0; j < len; j++) {
-					players.peek().getValue().add((Player) ois.readObject());
+				List<Player> list = new ArrayList<>(listSize);
+				for (int j = 0; j < listSize; j++) {
+					list.add((Player) ois.readObject());
 				}
+
+				players.put(listName, list);
 			}
 		}
 
-		return new ArrayList<>(players);
+		return players;
 	}
 
 }

@@ -11,7 +11,7 @@ public enum Data {
 	PET0(0), PET1(270),
 
 	KNIGHTS0(13), KNIGHTS1(15),
-
+	
 	;
 
 	// Preferences

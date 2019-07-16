@@ -120,7 +120,7 @@ public class Player implements Serializable {
 		this.Achievements = stripped.stream().filter(L -> L > 0).count();
 		this.AchievementsTotal = (long) stripped.size();
 		
-		if (data.containsKey("guild_role")) {
+		if (data.containsKey("guild_role") && Get(data, "guild_role") < 4) {
 			this.GuildRole = Constants.GROUP_ROLES[(int) Get(data, "guild_role").intValue()];
 			this.GuildRoleId = Get(data, "guild_role");
 			this.GuildTreasure = Get(data, "guild_treasure");

@@ -1,22 +1,22 @@
 package ui;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
-import org.json.simple.parser.ParseException;
-
-import app.Main;
 import app.TabManager;
 import javafx.application.Platform;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseButton;
@@ -26,11 +26,9 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.text.TextAlignment;
-import javafx.util.Pair;
-import sf.io.HARImporter;
-import sf.io.SFPExporter;
-import sf.io.SFPImporter;
+import sf.DataManager;
 import ui.util.FX;
+import ui.util.PlayerSnapshot;
 
 public class TabFile extends Tab {
 
@@ -64,14 +62,7 @@ public class TabFile extends Tab {
 		root.add(new ProgressBar(-1), 1, 2);
 
 		new Thread(() -> {
-			File file = new File("sftools.sfp");
-			if (file.exists()) {
-				try {
-					Main.PLAYERS.addAll(SFPImporter.importSFP(file));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
+			DataManager.getInstance().loadCachedFiles();
 
 			Platform.runLater(() -> {
 				root.getChildren().clear();
@@ -120,26 +111,11 @@ public class TabFile extends Tab {
 				double done = 0;
 
 				for (File f : files) {
-					String name = f.getName().substring(0, f.getName().indexOf("."));
-					String extr = f.getName().toLowerCase();
-
-					if (!Main.PLAYERS.stream().anyMatch(KV -> KV.getKey().equals(name)) && extr.endsWith(".har")) {
-						try {
-							Main.PLAYERS.add(new Pair<>(name, HARImporter.importHAR(f)));
-						} catch (IOException | ParseException e) {
-							e.printStackTrace();
-						}
-					}
+					DataManager.getInstance().loadFile(f);
 
 					done++;
 
 					bar.setProgress(done / size);
-				}
-
-				try {
-					SFPExporter.exportSFP(new File("sftools.sfp"), Main.PLAYERS);
-				} catch (IOException e) {
-					e.printStackTrace();
 				}
 
 				bar.setVisible(false);
@@ -168,38 +144,26 @@ public class TabFile extends Tab {
 	}
 
 	public void updateContent() {
-		if (Main.PLAYERS.isEmpty()) {
-			pane.setContent(null);
-		} else {
-			HBox box = new HBox();
-			box.setAlignment(Pos.CENTER_LEFT);
-			box.setSpacing(5);
+		HBox box = new HBox();
+		box.setAlignment(Pos.CENTER_LEFT);
+		box.setSpacing(5);
 
-			for (int i = 0; i < Main.PLAYERS.size(); i++) {
-				createSub(box, i);
-			}
-
-			pane.setContent(box);
+		for (int i = 0; i < DataManager.getInstance().get().size(); i++) {
+			createSub(box, i);
 		}
+
+		pane.setContent(box);
 	}
 
 	private void createSub(HBox box, int i) {
 		BorderPane root = new BorderPane();
 
+		String name = DataManager.getInstance().get(i);
+
 		root.setOnMouseClicked(E -> {
-			if (E.isStillSincePress() && E.isControlDown() && E.getButton().equals(MouseButton.PRIMARY)) {
+			if (E.isStillSincePress() && E.getButton().equals(MouseButton.PRIMARY)) {
 				E.consume();
-
-				Main.PLAYERS.remove(i);
-
-				try {
-					SFPExporter.exportSFP(new File("sftools.sfp"), Main.PLAYERS);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			} else if (E.isStillSincePress() && E.getButton().equals(MouseButton.PRIMARY)) {
-				E.consume();
-				TabManager.toggle(TabManager.getLabel(i));
+				TabManager.toggle(DataManager.getInstance().get(i));
 
 				Platform.runLater(() -> {
 					updateContent();
@@ -207,16 +171,39 @@ public class TabFile extends Tab {
 			}
 		});
 
-		if (TabManager.isOpen(TabManager.getLabel(i))) {
+		if (TabManager.isOpen(name)) {
 			root.setStyle("-fx-background-color: accent_color;");
 		} else {
 			root.setStyle("-fx-background-color: tab_pane_background_color;");
 		}
 
-		Label label = FX.label(Main.PLAYERS.get(i).getKey(), 18);
-		label.setPadding(new Insets(0, 10, 0, 10));
+		Label label = FX.label(DataManager.getInstance().get(i), 18);
 		label.setWrapText(true);
 		label.setTextAlignment(TextAlignment.CENTER);
+		
+		{
+			MenuItem b0 = new MenuItem("Any");
+			MenuItem b1 = new MenuItem("Group members");
+			MenuItem b2 = new SeparatorMenuItem();
+			MenuItem b3 = new MenuItem("Remove");
+
+			Menu b01 = new Menu("Save as image");
+			b01.getItems().addAll(b0, b1);
+
+			b0.setOnAction(E -> PlayerSnapshot.save(DataManager.getInstance().get(name), false));
+			b1.setOnAction(E -> PlayerSnapshot.save(DataManager.getInstance().get(name), true));
+			b3.setOnAction(E -> DataManager.getInstance().remove(name));
+
+			ContextMenu menu = new ContextMenu(b01, b2, b3);
+			
+			root.setOnContextMenuRequested(E -> {
+				if (menu.isShowing()) {
+					menu.hide();
+				}
+				
+				menu.show(root, (int) E.getScreenX(), (int) E.getScreenY());
+			});
+		}
 
 		root.setCenter(label);
 

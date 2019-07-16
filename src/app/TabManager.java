@@ -3,17 +3,16 @@ package app;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javafx.application.Platform;
-import javafx.collections.ListChangeListener;
+import javafx.collections.MapChangeListener;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TabPane.TabClosingPolicy;
-import javafx.util.Pair;
+import sf.DataManager;
 import sf.Player;
 import ui.TabFile;
-import ui.TabPlayerList;
+import ui.TabDetail;
 import ui.TabSettings;
 
 public class TabManager {
@@ -24,7 +23,8 @@ public class TabManager {
 	private static TabSettings TAB_SETTINGS;
 
 	// Tab info
-	private static Map<String, Pair<Boolean, Tab>> TABS = new HashMap<>();
+	private static Map<String, Boolean> TABS_OPEN = new HashMap<>();
+	private static Map<String, Tab> TABS = new HashMap<>();
 
 	// Constructor
 	public static TabPane build() {
@@ -36,37 +36,39 @@ public class TabManager {
 
 		TAB_PANE.getTabs().addAll(TAB_FILE, TAB_SETTINGS);
 
-		Main.PLAYERS.addListener(new ListChangeListener<Pair<String, List<Player>>>() {
+		DataManager.getInstance().get().addListener(new MapChangeListener<String, List<Player>>() {
 			@Override
-			public void onChanged(Change<? extends Pair<String, List<Player>>> c) {
+			public void onChanged(Change<? extends String, ? extends List<Player>> c) {
 				Platform.runLater(() -> {
-					while (c.next()) {
-						for (Pair<String, List<Player>> item : c.getRemoved()) {
-							TABS.remove(item.getKey());
-						}
+					if (c.wasAdded()) {
+						TabDetail tab = new TabDetail(c.getKey(), c.getValueAdded());
+						tab.setOnClosed(E -> {
+							TABS_OPEN.put(c.getKey(), false);
+							TAB_FILE.updateContent();
+						});
 
-						for (Pair<String, List<Player>> item : c.getAddedSubList()) {
-							TABS.put(item.getKey(), new Pair<>(false, new TabPlayerList(item)));
-						}
+						TABS.put(c.getKey(), tab);
+						TABS_OPEN.put(c.getKey(), false);
+					} else if (c.wasRemoved()) {
+						TABS.remove(c.getKey());
+						TABS_OPEN.remove(c.getKey());
 					}
 
 					update();
-					
 					TAB_FILE.updateContent();
 				});
 			}
 		});
 
+		update();
+		TAB_FILE.updateContent();
+
 		return TAB_PANE;
 	}
 
-	public static String getLabel(int i) {
-		return (String) TABS.keySet().toArray()[i];
-	}
-
 	public static void update() {
-		for (Pair<Boolean, Tab> tab : TABS.values()) {
-			if (tab.getKey()) {
+		for (Map.Entry<String, Tab> tab : TABS.entrySet()) {
+			if (TABS_OPEN.getOrDefault(tab.getKey(), false)) {
 				if (!TAB_PANE.getTabs().contains(tab.getValue())) {
 					TAB_PANE.getTabs().add(tab.getValue());
 				}
@@ -77,17 +79,19 @@ public class TabManager {
 			}
 		}
 
-		TAB_PANE.getTabs().subList(2, TAB_PANE.getTabs().size()).removeIf(T -> !TABS.values().stream().map(KV -> KV.getValue()).collect(Collectors.toList()).contains(T));
+		TAB_PANE.getTabs().subList(2, TAB_PANE.getTabs().size()).removeIf(T -> !TABS.values().contains(T));
 	}
 
 	public static boolean isOpen(String name) {
-		return TABS.getOrDefault(name, new Pair<>(false, null)).getKey();
+		return TABS_OPEN.getOrDefault(name, false);
 	}
 
 	public static void toggle(String name) {
-		TABS.put(name, new Pair<>(!TABS.get(name).getKey(), TABS.get(name).getValue()));
+		TABS_OPEN.put(name, !TABS_OPEN.getOrDefault(name, false));
+
 		Platform.runLater(() -> {
 			update();
+			TAB_FILE.updateContent();
 		});
 	}
 

@@ -1,21 +1,16 @@
 package app;
 
-import java.util.List;
-
 import javafx.application.Application;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import javafx.util.Pair;
 import jfxtras.styles.jmetro8.JMetro;
-import sf.Player;
+import sf.DataManager;
 import ui.util.FX;
 
 public class Main extends Application {
 
-	public static ObservableList<Pair<String, List<Player>>> PLAYERS = FXCollections.observableArrayList();
-
+	public static Stage STAGE;
+	
 	public static void main(String[] args) {
 		launch(args);
 	}
@@ -23,6 +18,8 @@ public class Main extends Application {
 	@Override
 	public void start(Stage stage) throws Exception {
 		try {
+			STAGE = stage;
+			
 			FX.setTooltipDuration(5);
 
 			Scene scene = new Scene(TabManager.build(), 1024, 576);
@@ -30,7 +27,7 @@ public class Main extends Application {
 			// Styles
 			new JMetro(JMetro.Style.DARK).applyTheme(scene);
 			scene.getStylesheets().add(ClassLoader.getSystemResource("app.css").toExternalForm());
-
+			
 			stage.setTitle("SF Tools 1.0");
 			stage.setResizable(false);
 			stage.setScene(scene);
@@ -39,5 +36,11 @@ public class Main extends Application {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	@Override
+	public void stop() {
+		DataManager.getInstance().TIMER_TASK.run();
+		DataManager.getInstance().TIMER.cancel();
 	}
 }
