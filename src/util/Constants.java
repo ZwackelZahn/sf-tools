@@ -66,6 +66,7 @@ public class Constants {
 	public static final String[] FILTER = {
 		"playerlookat",
 		"playername",
+		"groupknights",
 		"achievement",
 		"fortressrank",
 		"playerSave",

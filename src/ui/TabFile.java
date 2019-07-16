@@ -190,8 +190,8 @@ public class TabFile extends Tab {
 			Menu b01 = new Menu("Save as image");
 			b01.getItems().addAll(b0, b1);
 
-			b0.setOnAction(E -> PlayerSnapshot.save(DataManager.getInstance().get(name), false));
-			b1.setOnAction(E -> PlayerSnapshot.save(DataManager.getInstance().get(name), true));
+			b0.setOnAction(E -> PlayerSnapshot.save(name, DataManager.getInstance().get(name), false));
+			b1.setOnAction(E -> PlayerSnapshot.save(name, DataManager.getInstance().get(name), true));
 			b3.setOnAction(E -> DataManager.getInstance().remove(name));
 
 			ContextMenu menu = new ContextMenu(b01, b2, b3);

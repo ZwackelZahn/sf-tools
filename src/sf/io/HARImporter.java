@@ -42,9 +42,10 @@ public class HARImporter {
 			Map<String, String> playerData = parse(guildString.get());
 			List<Long> groupSave = splitl(playerData.get("owngroupsave.groupSave").toString(), "/");
 			List<String> groupNames = splits(playerData.get("owngroupmember.r").toString(), ",");
+			List<Long> groupKnights = splitl(playerData.get("owngroupknights.r").toString(), ",");
 
 			for (int i = 0; i < groupNames.size(); i++) {
-				guildData.put(groupNames.get(i), new Long[] { groupSave.get(314 + i), groupSave.get(214 + i), groupSave.get(264 + i), groupSave.get(390 + i) });
+				guildData.put(groupNames.get(i), new Long[] { groupSave.get(314 + i), groupSave.get(214 + i), groupSave.get(264 + i), groupSave.get(390 + i), groupKnights.get(i) });
 			}
 		}
 
@@ -179,6 +180,10 @@ public class HARImporter {
 				data.put("guild_treasure", pg[1]);
 				data.put("guild_instructor", pg[2]);
 				data.put("guild_pet", pg[3]);
+
+				if ((Long) data.get("fortress_knights") == 0L) {
+					data.put("fortress_knights", pg[4]);
+				}
 			}
 		}
 

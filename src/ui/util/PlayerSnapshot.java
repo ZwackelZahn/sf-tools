@@ -23,12 +23,12 @@ import util.Data;
 
 public class PlayerSnapshot {
 
-	public static void save(List<Player> players, boolean onlyMembers) {
+	public static void save(String name, List<Player> players, boolean onlyMembers) {
 		List<WritableImage> images = new ArrayList<>();
 
 		FileChooser chooser = new FileChooser();
 		chooser.setTitle("Save as");
-		chooser.setInitialFileName("image");
+		chooser.setInitialFileName(name);
 		chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG file (*.png)", "*.png"));
 		File file = chooser.showSaveDialog(Main.STAGE);
 

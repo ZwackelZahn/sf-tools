@@ -61,8 +61,8 @@ public class TabDetail extends Tab {
 			Menu b01 = new Menu("Save as image");
 			b01.getItems().addAll(b0, b1);
 		
-			b0.setOnAction(E -> PlayerSnapshot.save(players, false));
-			b1.setOnAction(E -> PlayerSnapshot.save(players, true));
+			b0.setOnAction(E -> PlayerSnapshot.save(name, players, false));
+			b1.setOnAction(E -> PlayerSnapshot.save(name, players, true));
 			b3.setOnAction(E -> DataManager.getInstance().remove(name));
 
 			setContextMenu(new ContextMenu(b01, b2, b3));
