@@ -5,6 +5,7 @@ import java.text.MessageFormat;
 import javafx.geometry.HPos;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.Tab;
@@ -12,7 +13,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import ui.util.FX;
-import util.Data;
+import ui.util.FXLabel;
+import util.Prefs;
 
 public class TabSettings extends Tab {
 
@@ -44,16 +46,35 @@ public class TabSettings extends Tab {
 		FX.row(root, null, 5);
 		FX.row(root, null, 5);
 		FX.row(root, null, 5);
+		FX.row(root, null, 10);
+		FX.row(root, null, 5);
 
-		createControlBlock(root, 0, 0, "Scrapbook highlighting", Data.BOOK0, Data.BOOK1, 0L, 2160L, true);
-		createControlBlock(root, 1, 0, "Mount highlighting", Data.MOUNT0, Data.MOUNT1, 0L, 50L, false);
-		createControlBlock(root, 0, 1, "Pet highlighting", Data.PET0, Data.PET1, 0L, 1000L, false);
-		createControlBlock(root, 1, 1, "Knight highlighting", Data.KNIGHTS0, Data.KNIGHTS1, 0L, 20L, false);
+		createControlBlock(root, 0, 0, "Scrapbook highlighting", Prefs.BOOK0, Prefs.BOOK1, 0L, 2160L, true);
+		createControlBlock(root, 1, 0, "Mount highlighting", Prefs.MOUNT0, Prefs.MOUNT1, 0L, 50L, false);
+		createControlBlock(root, 0, 1, "Pet highlighting", Prefs.PET0, Prefs.PET1, 0L, 1000L, false);
+		createControlBlock(root, 1, 1, "Knight highlighting", Prefs.KNIGHTS0, Prefs.KNIGHTS1, 0L, 20L, false);
+		createControlBlock(root, 0, 2, "Highlighting", "Apply to all players", Prefs.HIGHLIGHT_ALL);
 
 		return root;
 	}
 
-	private void createControlBlock(GridPane root, int col, int row, String text, Data a, Data b, Long min, Long max, boolean percent) {
+	private void createControlBlock(GridPane root, int col, int row, String text, String sub, Prefs a) {
+		int c = 1 + col * 4;
+		int r = 1 + row * 4;
+
+		Label label = new FXLabel(text).font(15, FontWeight.BOLD);
+		CheckBox box = new CheckBox(sub);
+
+		box.setSelected(a.val() == 1);
+		box.setOnAction(E -> {
+			a.val(box.isSelected() ? 1 : 0);
+		});
+		
+		root.add(label, c, r, 2, 1);
+		root.add(box, c, r + 1);
+	}
+
+	private void createControlBlock(GridPane root, int col, int row, String text, Prefs a, Prefs b, Long min, Long max, boolean percent) {
 		int c = 1 + col * 4;
 		int r = 1 + row * 4;
 

@@ -11,8 +11,9 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.TabPane.TabClosingPolicy;
 import sf.DataManager;
 import sf.Player;
-import ui.TabFile;
+import ui.TabChart;
 import ui.TabDetail;
+import ui.TabFile;
 import ui.TabSettings;
 
 public class TabManager {
@@ -21,6 +22,7 @@ public class TabManager {
 	private static TabPane TAB_PANE;
 	private static TabFile TAB_FILE;
 	private static TabSettings TAB_SETTINGS;
+	private static TabChart TAB_CHART;
 
 	// Tab info
 	private static Map<String, Boolean> TABS_OPEN = new HashMap<>();
@@ -33,8 +35,9 @@ public class TabManager {
 
 		TAB_FILE = new TabFile();
 		TAB_SETTINGS = new TabSettings();
+		TAB_CHART = new TabChart();
 
-		TAB_PANE.getTabs().addAll(TAB_FILE, TAB_SETTINGS);
+		TAB_PANE.getTabs().addAll(TAB_FILE, TAB_SETTINGS, TAB_CHART);
 
 		DataManager.getInstance().get().addListener(new MapChangeListener<String, List<Player>>() {
 			@Override
@@ -79,7 +82,7 @@ public class TabManager {
 			}
 		}
 
-		TAB_PANE.getTabs().subList(2, TAB_PANE.getTabs().size()).removeIf(T -> !TABS.values().contains(T));
+		TAB_PANE.getTabs().subList(3, TAB_PANE.getTabs().size()).removeIf(T -> !TABS.values().contains(T));
 	}
 
 	public static boolean isOpen(String name) {

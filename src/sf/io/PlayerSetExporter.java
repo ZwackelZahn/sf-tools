@@ -1,10 +1,12 @@
-package ui.util;
+package sf.io;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.imageio.ImageIO;
 
@@ -17,13 +19,20 @@ import javafx.scene.control.Label;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
+import sf.DataManager;
 import sf.Player;
-import util.Data;
+import ui.util.FX;
+import ui.util.FXLabel;
+import util.Prefs;
 
-public class PlayerSnapshot {
+public class PlayerSetExporter {
 
-	public static void save(String name, List<Player> players, boolean onlyMembers) {
+	public static void asImage(String name, String compareName, boolean onlyMembers) {
+		List<Player> players = DataManager.getInstance().get(name);
+		List<Player> compare = Objects.isNull(compareName) ? null : DataManager.getInstance().get(compareName);
+
 		List<WritableImage> images = new ArrayList<>();
 
 		FileChooser chooser = new FileChooser();
@@ -33,8 +42,8 @@ public class PlayerSnapshot {
 		File file = chooser.showSaveDialog(Main.STAGE);
 
 		if (file != null) {
-			for (int i = 0; i < players.size() / 50 + 1; i++) {
-				images.add(savePartial(players.subList(i * 50, Math.min(50 + i * 50, players.size())), onlyMembers));
+			for (int start = 0; start < players.size(); start += 50) {
+				images.add(createImageFromBlock(players.subList(start, Math.min(start + 50, players.size())), compare, onlyMembers));
 
 				if (onlyMembers) {
 					break;
@@ -46,7 +55,7 @@ public class PlayerSnapshot {
 				String path = filepath.substring(0, filepath.lastIndexOf("."));
 
 				for (int i = 0; i < images.size(); i++) {
-					File f = new File(String.format("%s%s.png", path, i > 0 ? String.valueOf(i) : ""));
+					File f = new File(String.format("%s%s.png", path, i > 0 ? String.format("_%d", i) : ""));
 
 					ImageIO.write(SwingFXUtils.fromFXImage(images.get(i), null), "png", f);
 				}
@@ -56,7 +65,40 @@ public class PlayerSnapshot {
 		}
 	}
 
-	private static WritableImage savePartial(List<Player> players, boolean onlyMembers) {
+	public static void asCSV(String name, boolean onlyMembers) {
+		FileChooser chooser = new FileChooser();
+		chooser.setTitle("Save as");
+		chooser.setInitialFileName(name);
+		chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV file (*.csv)", "*.csv"));
+		File file = chooser.showSaveDialog(Main.STAGE);
+
+		if (file != null) {
+			try (FileWriter fw = new FileWriter(file)) {
+				fw.write("Name;Level;Album;Awards;Potion;Potion;Potion;Treasure;Instructor;Pet;Knights;PlayerRank;PlayerHonor;FortressRank;FortressHonor;Wall;Warriors;Archers;Mages;Upgrades;Strength;Dexterity;Intelligence;Constitution;Luck;Armor");
+
+				for (Player p : DataManager.getInstance().get(name)) {
+					if (onlyMembers && p.GuildRole == null) {
+						continue;
+					}
+
+					fw.write(String.format("\n%s;%d;%f;%d;%d;%d;%d", p.Name, p.Level, p.Book.doubleValue() / 2160D, p.Achievements, p.PotionDuration1, p.PotionDuration2, p.PotionDuration3));
+
+					if (p.GuildRole != null) {
+						fw.write(String.format(";%d;%d;%d;%d", p.GuildTreasure, p.GuildInstructor, p.GuildPet, p.FortressKnights));
+					} else {
+						fw.write(";;;;");
+					}
+
+					fw.write(String.format(";%d;%d;%d;%d;%d;%d;%d;%d;%d", p.RankPlayer, p.HonorPlayer, p.RankFortress, p.HonorFortress, p.FortressWall, p.FortressWarriors, p.FortressArchers, p.FortressMages, p.FortressUpgrades));
+					fw.write(String.format(";%d;%d;%d;%d;%d;%d", p.Strength, p.Dexterity, p.Intelligence, p.Constitution, p.Luck, p.Armor));
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private static WritableImage createImageFromBlock(List<Player> players, List<Player> compare, boolean onlyMembers) {
 		GridPane root = new GridPane();
 
 		FX.col(root, HPos.CENTER, 22);
@@ -80,7 +122,7 @@ public class PlayerSnapshot {
 		FX.row(root, null, 2);
 		FX.rowa(root, null, 2);
 
-		for (int i = 0; i < 25; i++) {
+		for (int i = 0; i < players.size() / 2; i++) {
 			FX.row(root, null, -1);
 			FX.row(root, null, -1);
 			FX.rowa(root, null, 1);
@@ -108,6 +150,11 @@ public class PlayerSnapshot {
 		int row = 3;
 		for (int i = 0; i < players.size(); i++) {
 			Player p = players.get(i);
+			Player c = null;
+
+			if (Objects.nonNull(compare)) {
+				c = compare.stream().filter(P -> P.Name.equals(p.Name)).findFirst().orElse(null);
+			}
 
 			if (onlyMembers && p.GuildRole == null) {
 				continue;
@@ -115,17 +162,30 @@ public class PlayerSnapshot {
 				createCell(root, 0, row, p.Name, null);
 				createCell(root, 2, row, p.Level.toString(), null);
 
+				if (Objects.nonNull(c) && !c.Level.equals(p.Level)) {
+					Label levelDelta = new FXLabel("+%d", p.Level - c.Level).align(Pos.BASELINE_RIGHT);
+					GridPane.setHalignment(levelDelta, HPos.RIGHT);
+
+					root.add(levelDelta, 2, row);
+				}
+
 				if (p.GuildRole != null) {
-					createCell(root, 3, row, MessageFormat.format("{0,number,##.#}%", 100D * p.Book.doubleValue() / 2160D), getColor(p.Book, Data.BOOK0.val(), Data.BOOK1.val()));
-					createCell(root, 4, row, p.Mount.toString(), getColor(p.Mount, Data.MOUNT0.val(), Data.MOUNT1.val()));
+					createCell(root, 3, row, MessageFormat.format("{0,number,##.#}%", 100D * p.Book.doubleValue() / 2160D), getColor(p.Book, Prefs.BOOK0.val(), Prefs.BOOK1.val()));
+					createCell(root, 4, row, p.Mount.toString(), getColor(p.Mount, Prefs.MOUNT0.val(), Prefs.MOUNT1.val()));
 
 					createCell(root, 12, row, p.GuildTreasure.toString(), null);
 					createCell(root, 13, row, p.GuildInstructor.toString(), null);
-					createCell(root, 14, row, p.GuildPet.toString(), getColor(p.GuildPet, Data.PET0.val(), Data.PET1.val()));
-					createCell(root, 15, row, p.FortressKnights.toString(), getColor(p.FortressKnights, Data.KNIGHTS0.val(), Data.KNIGHTS1.val()));
+					createCell(root, 14, row, p.GuildPet.toString(), getColor(p.GuildPet, Prefs.PET0.val(), Prefs.PET1.val()));
+					createCell(root, 15, row, p.FortressKnights.toString(), getColor(p.FortressKnights, Prefs.KNIGHTS0.val(), Prefs.KNIGHTS1.val()));
 				} else {
-					createCell(root, 3, row, MessageFormat.format("{0,number,##.#}%", 100D * p.Book.doubleValue() / 2160D), null);
-					createCell(root, 4, row, p.Mount.toString(), null);
+					if (Prefs.HIGHLIGHT_ALL.val() > 0) {
+						createCell(root, 3, row, MessageFormat.format("{0,number,##.#}%", 100D * p.Book.doubleValue() / 2160D), getColor(p.Book, Prefs.BOOK0.val(), Prefs.BOOK1.val()));
+						createCell(root, 4, row, p.Mount.toString(), getColor(p.Mount, Prefs.MOUNT0.val(), Prefs.MOUNT1.val()));
+					} else {
+						createCell(root, 3, row, MessageFormat.format("{0,number,##.#}%", 100D * p.Book.doubleValue() / 2160D), null);
+						createCell(root, 4, row, p.Mount.toString(), null);
+					}
+
 				}
 
 				createCell(root, 6, row, p.Achievements.toString(), null);
@@ -153,7 +213,7 @@ public class PlayerSnapshot {
 
 	private static void createBorder(GridPane root, int c, int r, int cc, int rr) {
 		StackPane stack = new StackPane();
-		stack.getChildren().add(FX.label(" ", 0.2));
+		stack.getChildren().add(new FXLabel(" ").font(0.2));
 		GridPane.setFillHeight(stack, true);
 		GridPane.setFillWidth(stack, true);
 		stack.setStyle("-fx-background-color: black;");
@@ -164,7 +224,7 @@ public class PlayerSnapshot {
 		StackPane stack = new StackPane();
 
 		stack.setAlignment(Pos.CENTER);
-		stack.getChildren().add(FX.labelb(text));
+		stack.getChildren().add(new FXLabel(text).font(FontWeight.BOLD));
 
 		GridPane.setFillHeight(stack, true);
 		GridPane.setFillWidth(stack, true);

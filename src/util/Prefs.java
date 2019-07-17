@@ -2,7 +2,7 @@ package util;
 
 import java.util.prefs.Preferences;
 
-public enum Data {
+public enum Prefs {
 
 	BOOK0(1512), BOOK1(1944),
 
@@ -11,15 +11,16 @@ public enum Data {
 	PET0(0), PET1(270),
 
 	KNIGHTS0(13), KNIGHTS1(15),
-	
+
+	HIGHLIGHT_ALL(0)
+
 	;
 
 	// Preferences
 	private static final Preferences PREFERENCES = Preferences.userRoot().node("eu/mar21/sftools");
 	static {
-		for (Data s : Data.values()) {
-			s.val = s.def;
-			PREFERENCES.putLong(s.name(), s.val);
+		for (Prefs s : Prefs.values()) {
+			s.val = PREFERENCES.getLong(s.name(), s.def);
 		}
 	}
 
@@ -28,7 +29,7 @@ public enum Data {
 	private Long def;
 
 	// Constructor
-	Data(Number value) {
+	Prefs(Number value) {
 		val = value.longValue();
 		def = value.longValue();
 	}

@@ -2,6 +2,7 @@ package sf;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
@@ -35,6 +36,8 @@ public class DataManager {
 	public final TimerTask TIMER_TASK;
 
 	private final ObservableMap<String, List<Player>> players = FXCollections.observableMap(new ConcurrentHashMap<>());
+	private final List<String> playerKeys = new ArrayList<>();
+
 	private final File cache = new File("cache.sfp");
 
 	private final AtomicBoolean stateChanged = new AtomicBoolean(false);
@@ -46,7 +49,7 @@ public class DataManager {
 			public void run() {
 				if (stateChanged.compareAndSet(true, false)) {
 					try {
-						SFPExporter.exportFastSFP(cache, players);
+						SFPExporter.exportFastSFP(cache, players, playerKeys);
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -68,13 +71,17 @@ public class DataManager {
 	}
 
 	public String get(int i) {
-		return players.keySet().toArray()[i].toString();
+		return playerKeys.get(i);
+	}
+
+	public int size() {
+		return playerKeys.size();
 	}
 
 	public void loadCachedFiles() {
 		try {
 			if (cache.exists()) {
-				players.putAll(SFPImporter.importSFP(cache));
+				players.putAll(SFPImporter.importSFP(cache, playerKeys));
 			}
 		} catch (IOException | ClassNotFoundException e) {
 			e.printStackTrace();
@@ -88,6 +95,7 @@ public class DataManager {
 
 			if (!players.containsKey(filename) && extended.endsWith(".har")) {
 				players.put(filename, HARImporter.importHAR(file));
+				playerKeys.add(filename);
 
 				stateChanged.set(true);
 			}
@@ -98,6 +106,7 @@ public class DataManager {
 
 	public void remove(String key) {
 		players.remove(key);
+		playerKeys.remove(key);
 
 		stateChanged.set(true);
 	}

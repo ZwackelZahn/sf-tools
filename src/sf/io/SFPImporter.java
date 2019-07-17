@@ -13,7 +13,7 @@ import sf.Player;
 
 public class SFPImporter {
 
-	public static Map<String, List<Player>> importSFP(File file) throws IOException, ClassNotFoundException {
+	public static Map<String, List<Player>> importSFP(File file, List<String> keyOrder) throws IOException, ClassNotFoundException {
 		Map<String, List<Player>> players = new HashMap<>();
 
 		try (FileInputStream fis = new FileInputStream(file); ObjectInputStream ois = new ObjectInputStream(fis)) {
@@ -29,6 +29,7 @@ public class SFPImporter {
 				}
 
 				players.put(listName, list);
+				keyOrder.add(listName);
 			}
 		}
 

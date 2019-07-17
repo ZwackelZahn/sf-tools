@@ -11,12 +11,9 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
-import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseButton;
@@ -27,8 +24,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.text.TextAlignment;
 import sf.DataManager;
+import ui.util.EntryContextMenu;
 import ui.util.FX;
-import ui.util.PlayerSnapshot;
+import ui.util.FXLabel;
 
 public class TabFile extends Tab {
 
@@ -58,7 +56,7 @@ public class TabFile extends Tab {
 		FX.row(root, null, 10);
 		FX.row(root, null, 40);
 
-		root.add(FX.label("Loading cached data", 20), 1, 1);
+		root.add(new FXLabel("Loading cached data").font(20), 1, 1);
 		root.add(new ProgressBar(-1), 1, 2);
 
 		new Thread(() -> {
@@ -139,7 +137,7 @@ public class TabFile extends Tab {
 		updateContent();
 
 		root.add(pane, 0, 1, 3, 1);
-		root.add(FX.label("Drop files here", 20), 1, 3);
+		root.add(new FXLabel("Drop files here").font(20), 1, 3);
 		root.add(bar, 1, 4);
 	}
 
@@ -177,30 +175,18 @@ public class TabFile extends Tab {
 			root.setStyle("-fx-background-color: tab_pane_background_color;");
 		}
 
-		Label label = FX.label(DataManager.getInstance().get(i), 18);
+		Label label = new FXLabel(DataManager.getInstance().get(i)).font(18);
 		label.setWrapText(true);
 		label.setTextAlignment(TextAlignment.CENTER);
-		
+
 		{
-			MenuItem b0 = new MenuItem("Any");
-			MenuItem b1 = new MenuItem("Group members");
-			MenuItem b2 = new SeparatorMenuItem();
-			MenuItem b3 = new MenuItem("Remove");
+			ContextMenu menu = new EntryContextMenu(name, DataManager.getInstance().get(name));
 
-			Menu b01 = new Menu("Save as image");
-			b01.getItems().addAll(b0, b1);
-
-			b0.setOnAction(E -> PlayerSnapshot.save(name, DataManager.getInstance().get(name), false));
-			b1.setOnAction(E -> PlayerSnapshot.save(name, DataManager.getInstance().get(name), true));
-			b3.setOnAction(E -> DataManager.getInstance().remove(name));
-
-			ContextMenu menu = new ContextMenu(b01, b2, b3);
-			
 			root.setOnContextMenuRequested(E -> {
 				if (menu.isShowing()) {
 					menu.hide();
 				}
-				
+
 				menu.show(root, (int) E.getScreenX(), (int) E.getScreenY());
 			});
 		}

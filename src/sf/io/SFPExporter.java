@@ -13,18 +13,20 @@ import sf.Player;
 
 public class SFPExporter {
 
-	public static void exportFastSFP(File file, Map<String, List<Player>> players) throws IOException {
+	public static void exportFastSFP(File file, Map<String, List<Player>> players, List<String> keyOrder) throws IOException {
 		new PrintWriter(file).close();
 		;
 
 		try (RandomAccessFile raf = new RandomAccessFile(file, "rw"); FileOutputStream fos = new FileOutputStream(raf.getFD()); ObjectOutputStream oos = new ObjectOutputStream(fos);) {
 			oos.writeInt(players.size());
 
-			for (Map.Entry<String, List<Player>> keyval : players.entrySet()) {
-				oos.writeInt(keyval.getValue().size());
-				oos.writeObject(keyval.getKey());
+			for (String key : keyOrder) {
+				List<Player> list = players.get(key);
 
-				for (Player p : keyval.getValue()) {
+				oos.writeInt(list.size());
+				oos.writeObject(key);
+
+				for (Player p : list) {
 					oos.writeObject(p);
 					oos.reset();
 				}
