@@ -8,7 +8,7 @@ import util.Constants;
 
 public class Player implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 40L;
 
 	public String Name;
 

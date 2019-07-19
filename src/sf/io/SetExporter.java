@@ -217,6 +217,24 @@ public class SetExporter {
 
 						root.add(bookDelta, 3, row);
 					}
+
+					if (c.GuildRole != null) {
+						if (!c.GuildPet.equals(p.GuildPet)) {
+							Label petDelta = new FXLabel("+%d", p.GuildPet - c.GuildPet).align(Pos.BASELINE_RIGHT).font(10);
+							petDelta.setPadding(new Insets(0, 2, 0, 0));
+							GridPane.setHalignment(petDelta, HPos.RIGHT);
+
+							root.add(petDelta, 14, row);
+						}
+
+						if (!c.FortressKnights.equals(p.FortressKnights)) {
+							Label knightsDelta = new FXLabel("+%d", p.FortressKnights - c.FortressKnights).align(Pos.BASELINE_RIGHT).font(10);
+							knightsDelta.setPadding(new Insets(0, 2, 0, 0));
+							GridPane.setHalignment(knightsDelta, HPos.RIGHT);
+
+							root.add(knightsDelta, 15, row);
+						}
+					}
 				}
 
 				row++;

@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Item implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 41L;
 
 	public final Long SlotID;
 	public final Long ItemID;
