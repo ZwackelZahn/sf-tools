@@ -60,7 +60,7 @@ public class TabFile extends Tab {
 		root.add(new ProgressBar(-1), 1, 2);
 
 		new Thread(() -> {
-			DataManager.getInstance().loadCachedFiles();
+			DataManager.INSTANCE.loadArchive();
 
 			Platform.runLater(() -> {
 				root.getChildren().clear();
@@ -109,7 +109,7 @@ public class TabFile extends Tab {
 				double done = 0;
 
 				for (File f : files) {
-					DataManager.getInstance().loadFile(f);
+					DataManager.INSTANCE.loadHAR(f);
 
 					done++;
 
@@ -146,7 +146,7 @@ public class TabFile extends Tab {
 		box.setAlignment(Pos.CENTER_LEFT);
 		box.setSpacing(5);
 
-		for (int i = 0; i < DataManager.getInstance().get().size(); i++) {
+		for (int i = 0; i < DataManager.INSTANCE.getOrder().size(); i++) {
 			createSub(box, i);
 		}
 
@@ -156,12 +156,12 @@ public class TabFile extends Tab {
 	private void createSub(HBox box, int i) {
 		BorderPane root = new BorderPane();
 
-		String name = DataManager.getInstance().get(i);
+		String name = DataManager.INSTANCE.getKey(i);
 
 		root.setOnMouseClicked(E -> {
 			if (E.isStillSincePress() && E.getButton().equals(MouseButton.PRIMARY)) {
 				E.consume();
-				TabManager.toggle(DataManager.getInstance().get(i));
+				TabManager.toggle(DataManager.INSTANCE.getKey(i));
 
 				Platform.runLater(() -> {
 					updateContent();
@@ -175,12 +175,12 @@ public class TabFile extends Tab {
 			root.setStyle("-fx-background-color: tab_pane_background_color;");
 		}
 
-		Label label = new FXLabel(DataManager.getInstance().get(i)).font(18);
+		Label label = new FXLabel(DataManager.INSTANCE.getKey(i)).font(18);
 		label.setWrapText(true);
 		label.setTextAlignment(TextAlignment.CENTER);
 
 		{
-			ContextMenu menu = new EntryContextMenu(name, DataManager.getInstance().get(name));
+			ContextMenu menu = new EntryContextMenu(name);
 
 			root.setOnContextMenuRequested(E -> {
 				if (menu.isShowing()) {

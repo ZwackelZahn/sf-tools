@@ -39,7 +39,7 @@ public class TabManager {
 
 		TAB_PANE.getTabs().addAll(TAB_FILE, TAB_SETTINGS, TAB_CHART);
 
-		DataManager.getInstance().get().addListener(new MapChangeListener<String, List<Player>>() {
+		DataManager.INSTANCE.addListener(new MapChangeListener<String, List<Player>>() {
 			@Override
 			public void onChanged(Change<? extends String, ? extends List<Player>> c) {
 				Platform.runLater(() -> {

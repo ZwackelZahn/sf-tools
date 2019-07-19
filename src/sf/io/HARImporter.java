@@ -21,6 +21,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import sf.Item;
 import sf.Player;
 import util.Constants;
 
@@ -104,8 +105,10 @@ public class HARImporter {
 		sets.forEach((K, V) -> {
 			if (K.contains("groupname")) {
 				names[1] = V;
+				data.put("guild", V);
 			} else if (K.contains("name")) {
 				names[0] = V;
+				data.put("name", V);
 			} else if (K.contains("unitlevel")) {
 				data.put("fortress_units", splitl(V, "/"));
 			} else if (K.contains("achievement")) {
@@ -127,6 +130,16 @@ public class HARImporter {
 				data.put("attr_intelligence", values.get(23) + values.get(28));
 				data.put("attr_constitution", values.get(24) + values.get(29));
 				data.put("attr_luck", values.get(25) + values.get(29));
+				data.put("item_head", new Item(values.subList(39, 51)));
+				data.put("item_body", new Item(values.subList(51, 63)));
+				data.put("item_hand", new Item(values.subList(63, 75)));
+				data.put("item_foot", new Item(values.subList(75, 87)));
+				data.put("item_neck", new Item(values.subList(87, 99)));
+				data.put("item_belt", new Item(values.subList(99, 111)));
+				data.put("item_ring", new Item(values.subList(111, 123)));
+				data.put("item_misc", new Item(values.subList(123, 135)));
+				data.put("item_wea1", new Item(values.subList(135, 147)));
+				data.put("item_wea2", new Item(values.subList(147, 159)));
 				data.put("mount", values.get(159) % 16);
 				data.put("xp_book", values.get(163) - 10000);
 				data.put("attr_armor", values.get(168));
@@ -155,6 +168,16 @@ public class HARImporter {
 				data.put("attr_intelligence", values.get(32) + values.get(37));
 				data.put("attr_constitution", values.get(33) + values.get(38));
 				data.put("attr_luck", values.get(34) + values.get(39));
+				data.put("item_head", new Item(values.subList(48, 60)));
+				data.put("item_body", new Item(values.subList(60, 72)));
+				data.put("item_hand", new Item(values.subList(72, 84)));
+				data.put("item_foot", new Item(values.subList(84, 96)));
+				data.put("item_neck", new Item(values.subList(96, 108)));
+				data.put("item_belt", new Item(values.subList(108, 120)));
+				data.put("item_ring", new Item(values.subList(120, 132)));
+				data.put("item_misc", new Item(values.subList(132, 144)));
+				data.put("item_wea1", new Item(values.subList(144, 156)));
+				data.put("item_wea2", new Item(values.subList(156, 168)));
 				data.put("mount", values.get(286) % 16);
 				data.put("xp_book", values.get(438) - 10000);
 				data.put("attr_armor", values.get(447));
@@ -187,7 +210,7 @@ public class HARImporter {
 			}
 		}
 
-		return new Player(names[0], names[1], data);
+		return new Player(data);
 	}
 
 }

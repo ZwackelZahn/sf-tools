@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,102 +12,152 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.json.simple.parser.ParseException;
 
 import javafx.collections.FXCollections;
+import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
 import sf.io.HARImporter;
-import sf.io.SFPExporter;
-import sf.io.SFPImporter;
+import sf.io.SFPFileIO;
 
-public class DataManager {
+public enum DataManager {
 
-	// Singleton header
-	private static DataManager INSTANCE = new DataManager();
+	/*
+	 * Singleton
+	 */
+	INSTANCE;
 
-	public static DataManager getInstance() {
-		if (Objects.isNull(INSTANCE)) {
-			INSTANCE = new DataManager();
-		}
-
-		return INSTANCE;
-	}
-
-	// Class
-	public final Timer TIMER;
-	public final TimerTask TIMER_TASK;
-
-	private final ObservableMap<String, List<Player>> players = FXCollections.observableMap(new ConcurrentHashMap<>());
-	private final List<String> playerKeys = new ArrayList<>();
-
-	private final File cache = new File("cache.sfp");
-
-	private final AtomicBoolean stateChanged = new AtomicBoolean(false);
-
-	// Constructor
-	public DataManager() {
-		TIMER_TASK = new TimerTask() {
-			@Override
-			public void run() {
-				if (stateChanged.compareAndSet(true, false)) {
-					try {
-						SFPExporter.exportFastSFP(cache, players, playerKeys);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+	/*
+	 * Code for handling synchronization between current loaded data and archive file syncRequested is set to true when a change is made to set map
+	 */
+	private final Timer syncTimer = new Timer();
+	private final TimerTask syncTask = new TimerTask() {
+		@Override
+		public void run() {
+			if (syncRequested.compareAndSet(true, false)) {
+				try {
+					SFPFileIO.exportSFP(archive, playerSets, playerSetOrder);
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
-		};
+		}
+	};
+	private final AtomicBoolean syncRequested = new AtomicBoolean(false);
 
-		TIMER = new Timer();
-		TIMER.schedule(TIMER_TASK, 0, 5000);
+	/*
+	 * Loaded player sets, where playerSetOrder keeps the order in which individual sets were inserted
+	 */
+	private final ObservableMap<String, List<Player>> playerSets = FXCollections.observableMap(new ConcurrentHashMap<>());
+	private final List<String> playerSetOrder = new ArrayList<>();
+
+	/*
+	 * Player set listeners
+	 */
+	List<MapChangeListener<String, List<Player>>> listeners = new ArrayList<>();
+
+	public void addListener(MapChangeListener<String, List<Player>> listener) {
+		listeners.add(listener);
+		playerSets.addListener(listener);
 	}
 
-	// Functions
-	public ObservableMap<String, List<Player>> get() {
-		return players;
-	}
-
-	public List<Player> get(String key) {
-		return players.get(key);
-	}
-
-	public String get(int i) {
-		return playerKeys.get(i);
-	}
-
-	public int size() {
-		return playerKeys.size();
-	}
-
-	public void loadCachedFiles() {
-		try {
-			if (cache.exists()) {
-				players.putAll(SFPImporter.importSFP(cache, playerKeys));
-			}
-		} catch (IOException | ClassNotFoundException e) {
-			e.printStackTrace();
+	public void removeListeners() {
+		for (MapChangeListener<String, List<Player>> listener : listeners) {
+			playerSets.removeListener(listener);
 		}
 	}
 
-	public void loadFile(File file) {
-		try {
-			String filename = file.getName().substring(0, file.getName().lastIndexOf("."));
-			String extended = file.getName().toLowerCase();
+	/*
+	 * Archive file for already loaded data
+	 */
+	private final File archive = new File("cache.sfp");
 
-			if (!players.containsKey(filename) && extended.endsWith(".har")) {
-				players.put(filename, HARImporter.importHAR(file));
-				playerKeys.add(filename);
+	/*
+	 * Constructor, sets execution of sync calls every 5 seconds
+	 */
+	private DataManager() {
+		syncTimer.schedule(syncTask, 0, 5000);
+	}
 
-				stateChanged.set(true);
+	/*
+	 * Returns list based on key
+	 */
+	public List<Player> getSet(String key) {
+		return this.playerSets.getOrDefault(key, null);
+	}
+
+	/*
+	 * Returns key at specified position
+	 */
+	public String getKey(int index) {
+		return this.playerSetOrder.get(index);
+	}
+
+	/*
+	 * Returns amount of sets currently loaded
+	 */
+	public int getSize() {
+		return this.playerSetOrder.size();
+	}
+
+	/*
+	 * Returns key order
+	 */
+	public List<String> getOrder() {
+		return this.playerSetOrder;
+	}
+
+	/*
+	 * Loads sets from archive file
+	 */
+	public boolean loadArchive() {
+		if (archive.exists()) {
+			try {
+				playerSets.putAll(SFPFileIO.importSFP(archive, playerSetOrder));
+			} catch (ClassNotFoundException | IOException e) {
+				return false;
 			}
+
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/*
+	 * Loads set from HTTP archive file
+	 */
+	public boolean loadHAR(File file) {
+		try {
+			String name = file.getName().substring(0, file.getName().lastIndexOf("."));
+			String extension = file.getName().toLowerCase();
+
+			if (!playerSets.containsKey(name) && extension.endsWith(".har")) {
+				playerSets.put(name, HARImporter.importHAR(file));
+				playerSetOrder.add(name);
+
+				syncRequested.set(true);
+			}
+
+			return true;
 		} catch (IOException | ParseException e) {
-			e.printStackTrace();
+			return false;
 		}
 	}
 
-	public void remove(String key) {
-		players.remove(key);
-		playerKeys.remove(key);
+	/*
+	 * Permanently removes set
+	 */
+	public void removeSet(String key) {
+		playerSets.remove(key);
+		playerSetOrder.remove(key);
 
-		stateChanged.set(true);
+		syncRequested.set(true);
+	}
+
+	/*
+	 * Request immediate sync manually
+	 */
+	public void requestSync() {
+		syncTask.run();
+		syncTimer.cancel();
 	}
 
 }

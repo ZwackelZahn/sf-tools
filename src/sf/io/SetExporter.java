@@ -13,6 +13,7 @@ import javax.imageio.ImageIO;
 import app.Main;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -27,11 +28,11 @@ import ui.util.FX;
 import ui.util.FXLabel;
 import util.Prefs;
 
-public class PlayerSetExporter {
+public class SetExporter {
 
 	public static void asImage(String name, String compareName, boolean onlyMembers) {
-		List<Player> players = DataManager.getInstance().get(name);
-		List<Player> compare = Objects.isNull(compareName) ? null : DataManager.getInstance().get(compareName);
+		List<Player> players = DataManager.INSTANCE.getSet(name);
+		List<Player> compare = Objects.isNull(compareName) ? null : DataManager.INSTANCE.getSet(compareName);
 
 		List<WritableImage> images = new ArrayList<>();
 
@@ -74,14 +75,15 @@ public class PlayerSetExporter {
 
 		if (file != null) {
 			try (FileWriter fw = new FileWriter(file)) {
-				fw.write("Name;Level;Album;Awards;Potion;Potion;Potion;Treasure;Instructor;Pet;Knights;PlayerRank;PlayerHonor;FortressRank;FortressHonor;Wall;Warriors;Archers;Mages;Upgrades;Strength;Dexterity;Intelligence;Constitution;Luck;Armor");
+				fw.write(
+						"Name;Level;Class;Race;Sex;Album;Awards;Potion;Potion;Potion;Treasure;Instructor;Pet;Knights;PlayerRank;PlayerHonor;FortressRank;FortressHonor;Wall;Warriors;Archers;Mages;Upgrades;Strength;Dexterity;Intelligence;Constitution;Luck;Armor");
 
-				for (Player p : DataManager.getInstance().get(name)) {
+				for (Player p : DataManager.INSTANCE.getSet(name)) {
 					if (onlyMembers && p.GuildRole == null) {
 						continue;
 					}
 
-					fw.write(String.format("\n%s;%d;%f;%d;%d;%d;%d", p.Name, p.Level, p.Book.doubleValue() / 2160D, p.Achievements, p.PotionDuration1, p.PotionDuration2, p.PotionDuration3));
+					fw.write(String.format("\n%s;%d;%s;%s;%s;%f;%d;%d;%d;%d", p.Name, p.Level, p.Class, p.Race, p.Sex, p.Book.doubleValue() / 2160D, p.Achievements, p.PotionDuration1, p.PotionDuration2, p.PotionDuration3));
 
 					if (p.GuildRole != null) {
 						fw.write(String.format(";%d;%d;%d;%d", p.GuildTreasure, p.GuildInstructor, p.GuildPet, p.FortressKnights));
@@ -104,8 +106,15 @@ public class PlayerSetExporter {
 		FX.col(root, HPos.CENTER, 22);
 		FX.cola(root, HPos.CENTER, 1);
 		FX.col(root, HPos.CENTER, 8);
-		FX.col(root, HPos.CENTER, 8);
-		FX.col(root, HPos.CENTER, 8);
+
+		if (Objects.nonNull(compare)) {
+			FX.col(root, HPos.CENTER, 9);
+			FX.col(root, HPos.CENTER, 7);
+		} else {
+			FX.col(root, HPos.CENTER, 8);
+			FX.col(root, HPos.CENTER, 8);
+		}
+
 		FX.cola(root, HPos.CENTER, 1);
 		FX.col(root, HPos.CENTER, 8);
 		FX.cola(root, HPos.CENTER, 1);
@@ -152,8 +161,13 @@ public class PlayerSetExporter {
 			Player p = players.get(i);
 			Player c = null;
 
+			String bookFormat = "{0,number,#0.0}%";
+
 			if (Objects.nonNull(compare)) {
 				c = compare.stream().filter(P -> P.Name.equals(p.Name)).findFirst().orElse(null);
+				if (c != null) {
+					bookFormat = "{0,number,#0.0}%      ";
+				}
 			}
 
 			if (onlyMembers && p.GuildRole == null) {
@@ -162,15 +176,8 @@ public class PlayerSetExporter {
 				createCell(root, 0, row, p.Name, null);
 				createCell(root, 2, row, p.Level.toString(), null);
 
-				if (Objects.nonNull(c) && !c.Level.equals(p.Level)) {
-					Label levelDelta = new FXLabel("+%d", p.Level - c.Level).align(Pos.BASELINE_RIGHT);
-					GridPane.setHalignment(levelDelta, HPos.RIGHT);
-
-					root.add(levelDelta, 2, row);
-				}
-
 				if (p.GuildRole != null) {
-					createCell(root, 3, row, MessageFormat.format("{0,number,##.#}%", 100D * p.Book.doubleValue() / 2160D), getColor(p.Book, Prefs.BOOK0.val(), Prefs.BOOK1.val()));
+					createCell(root, 3, row, MessageFormat.format(bookFormat, 100D * p.Book.doubleValue() / 2160D), getColor(p.Book, Prefs.BOOK0.val(), Prefs.BOOK1.val()));
 					createCell(root, 4, row, p.Mount.toString(), getColor(p.Mount, Prefs.MOUNT0.val(), Prefs.MOUNT1.val()));
 
 					createCell(root, 12, row, p.GuildTreasure.toString(), null);
@@ -179,10 +186,10 @@ public class PlayerSetExporter {
 					createCell(root, 15, row, p.FortressKnights.toString(), getColor(p.FortressKnights, Prefs.KNIGHTS0.val(), Prefs.KNIGHTS1.val()));
 				} else {
 					if (Prefs.HIGHLIGHT_ALL.val() > 0) {
-						createCell(root, 3, row, MessageFormat.format("{0,number,##.#}%", 100D * p.Book.doubleValue() / 2160D), getColor(p.Book, Prefs.BOOK0.val(), Prefs.BOOK1.val()));
+						createCell(root, 3, row, MessageFormat.format(bookFormat, 100D * p.Book.doubleValue() / 2160D), getColor(p.Book, Prefs.BOOK0.val(), Prefs.BOOK1.val()));
 						createCell(root, 4, row, p.Mount.toString(), getColor(p.Mount, Prefs.MOUNT0.val(), Prefs.MOUNT1.val()));
 					} else {
-						createCell(root, 3, row, MessageFormat.format("{0,number,##.#}%", 100D * p.Book.doubleValue() / 2160D), null);
+						createCell(root, 3, row, MessageFormat.format(bookFormat, 100D * p.Book.doubleValue() / 2160D), null);
 						createCell(root, 4, row, p.Mount.toString(), null);
 					}
 
@@ -193,6 +200,24 @@ public class PlayerSetExporter {
 				createCell(root, 8, row, "", getColor(p.PotionDuration1, 5, 25));
 				createCell(root, 9, row, "", getColor(p.PotionDuration2, 5, 25));
 				createCell(root, 10, row, "", getColor(p.PotionDuration3, 5, 25));
+
+				if (Objects.nonNull(c)) {
+					if (!c.Level.equals(p.Level)) {
+						Label levelDelta = new FXLabel("+%d", p.Level - c.Level).align(Pos.BASELINE_RIGHT).font(10);
+						levelDelta.setPadding(new Insets(0, 2, 0, 0));
+						GridPane.setHalignment(levelDelta, HPos.RIGHT);
+
+						root.add(levelDelta, 2, row);
+					}
+
+					if (!c.Book.equals(p.Book)) {
+						Label bookDelta = new FXLabel(MessageFormat.format("+{0,number,#0.00}", 100D * (p.Book.doubleValue() - c.Book.doubleValue()) / 2160D)).align(Pos.BASELINE_RIGHT).font(10);
+						bookDelta.setPadding(new Insets(0, 2, 0, 0));
+						GridPane.setHalignment(bookDelta, HPos.RIGHT);
+
+						root.add(bookDelta, 3, row);
+					}
+				}
 
 				row++;
 

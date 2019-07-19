@@ -51,7 +51,7 @@ public class TabDetail extends Tab {
 			createSecondaryContent(grid, players.get(playerList.getSelectionModel().getSelectedIndex()));
 		});
 
-		setContextMenu(new EntryContextMenu(name, players));
+		setContextMenu(new EntryContextMenu(name));
 
 		return root;
 	}
