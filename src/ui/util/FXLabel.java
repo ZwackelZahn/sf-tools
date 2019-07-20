@@ -4,6 +4,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.TextAlignment;
 
 public class FXLabel extends Label {
 
@@ -57,6 +58,18 @@ public class FXLabel extends Label {
 
 	public FXLabel align(Pos align) {
 		setAlignment(align);
+
+		return this;
+	}
+
+	public FXLabel align(TextAlignment align) {
+		setTextAlignment(align);
+
+		return this;
+	}
+
+	public FXLabel wrap(boolean wrap) {
+		setWrapText(wrap);
 
 		return this;
 	}

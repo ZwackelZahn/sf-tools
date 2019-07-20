@@ -1,5 +1,6 @@
 package ui.util;
 
+import app.DataManager;
 import javafx.collections.FXCollections;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
@@ -7,7 +8,6 @@ import javafx.scene.control.CustomMenuItem;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
-import sf.DataManager;
 import sf.io.SetExporter;
 
 public class EntryContextMenu extends ContextMenu {

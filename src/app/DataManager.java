@@ -1,4 +1,4 @@
-package sf;
+package app;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +14,7 @@ import org.json.simple.parser.ParseException;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
+import sf.Player;
 import sf.io.HARImporter;
 import sf.io.SFPFileIO;
 
@@ -86,8 +87,12 @@ public enum DataManager {
 	/*
 	 * Returns key at specified position
 	 */
-	public String getKey(int index) {
-		return this.playerSetOrder.get(index);
+	public String getLastKey() {
+		return this.playerSetOrder.isEmpty() ? null : this.playerSetOrder.get(this.playerSetOrder.size() - 1);
+	}
+
+	public String getFirstKey() {
+		return this.playerSetOrder.isEmpty() ? null : this.playerSetOrder.get(0);
 	}
 
 	/*
@@ -130,8 +135,8 @@ public enum DataManager {
 			String extension = file.getName().toLowerCase();
 
 			if (!playerSets.containsKey(name) && extension.endsWith(".har")) {
-				playerSets.put(name, HARImporter.importHAR(file));
 				playerSetOrder.add(name);
+				playerSets.put(name, HARImporter.importHAR(file));
 
 				syncRequested.set(true);
 			}

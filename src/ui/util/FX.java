@@ -93,7 +93,7 @@ public class FX {
 		return LONG_NUM_FORMATTER.format(l);
 	}
 
-	public static void setTooltipDuration(double duration) throws NoSuchFieldException, IllegalAccessException {
+	public static void setTooltipShowDelay(double duration) throws NoSuchFieldException, IllegalAccessException {
 		Tooltip tooltip = new Tooltip();
 
 		Field fieldBehavior = tooltip.getClass().getDeclaredField("BEHAVIOR");

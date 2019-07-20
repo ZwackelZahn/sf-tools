@@ -1,4 +1,4 @@
-package ui;
+package app.tabs;
 
 import javafx.geometry.Pos;
 import javafx.scene.Node;

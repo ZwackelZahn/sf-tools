@@ -41,8 +41,8 @@ public class SFPFileIO {
 			for (int i = 0; i < mapSize; i++) {
 				String listName = ois.readObject().toString();
 
-				players.put(listName, (ArrayList<Player>) ois.readObject());
 				keyOrder.add(listName);
+				players.put(listName, (ArrayList<Player>) ois.readObject());
 			}
 		}
 

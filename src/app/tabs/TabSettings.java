@@ -1,4 +1,4 @@
-package ui;
+package app.tabs;
 
 import java.text.MessageFormat;
 

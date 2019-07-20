@@ -1,101 +1,88 @@
 package app;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import app.tabs.TabChart;
+import app.tabs.TabDetails;
+import app.tabs.TabFile;
+import app.tabs.TabSettings;
 import javafx.application.Platform;
 import javafx.collections.MapChangeListener;
-import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TabPane.TabClosingPolicy;
-import sf.DataManager;
 import sf.Player;
-import ui.TabChart;
-import ui.TabDetail;
-import ui.TabFile;
-import ui.TabSettings;
 
-public class TabManager {
+public enum TabManager {
 
-	// Tab pane
-	private static TabPane TAB_PANE;
-	private static TabFile TAB_FILE;
-	private static TabSettings TAB_SETTINGS;
-	private static TabChart TAB_CHART;
+	INSTANCE;
 
-	// Tab info
-	private static Map<String, Boolean> TABS_OPEN = new HashMap<>();
-	private static Map<String, Tab> TABS = new HashMap<>();
+	/*
+	 * Tabs & TabPane
+	 */
+	private final TabPane root;
 
-	// Constructor
-	public static TabPane build() {
-		TAB_PANE = new TabPane();
-		TAB_PANE.setTabClosingPolicy(TabClosingPolicy.ALL_TABS);
+	private final TabFile fileTab;
+	private final TabSettings settingsTab;
+	private final TabDetails detailsTab;
+	private final TabChart chartTab;
 
-		TAB_FILE = new TabFile();
-		TAB_SETTINGS = new TabSettings();
-		TAB_CHART = new TabChart();
+	/*
+	 * Constructor
+	 */
+	private TabManager() {
+		this.root = new TabPane();
+		this.root.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
 
-		TAB_PANE.getTabs().addAll(TAB_FILE, TAB_SETTINGS, TAB_CHART);
+		this.fileTab = new TabFile();
+		this.settingsTab = new TabSettings();
+		this.detailsTab = new TabDetails();
+		this.chartTab = new TabChart();
 
+		this.root.getTabs().addAll(this.fileTab, this.settingsTab, this.detailsTab, this.chartTab);
+
+		/*
+		 * Listener to map changes in order to clear details tab when opened entry is removed
+		 */
 		DataManager.INSTANCE.addListener(new MapChangeListener<String, List<Player>>() {
 			@Override
-			public void onChanged(Change<? extends String, ? extends List<Player>> c) {
+			public void onChanged(Change<? extends String, ? extends List<Player>> change) {
 				Platform.runLater(() -> {
-					if (c.wasAdded()) {
-						TabDetail tab = new TabDetail(c.getKey(), c.getValueAdded());
-						tab.setOnClosed(E -> {
-							TABS_OPEN.put(c.getKey(), false);
-							TAB_FILE.updateContent();
-						});
-
-						TABS.put(c.getKey(), tab);
-						TABS_OPEN.put(c.getKey(), false);
-					} else if (c.wasRemoved()) {
-						TABS.remove(c.getKey());
-						TABS_OPEN.remove(c.getKey());
+					if (change.wasRemoved()) {
+						if (change.getKey().equals(detailsTab.getSelectedKey())) {
+							detailsTab.clearKey();
+						}
+					} else if (change.wasAdded()) {
+						TabManager.INSTANCE.getDetailsTab().selectKey(DataManager.INSTANCE.getLastKey());
 					}
 
-					update();
-					TAB_FILE.updateContent();
+					fileTab.update();
 				});
 			}
+
 		});
-
-		update();
-		TAB_FILE.updateContent();
-
-		return TAB_PANE;
 	}
 
-	public static void update() {
-		for (Map.Entry<String, Tab> tab : TABS.entrySet()) {
-			if (TABS_OPEN.getOrDefault(tab.getKey(), false)) {
-				if (!TAB_PANE.getTabs().contains(tab.getValue())) {
-					TAB_PANE.getTabs().add(tab.getValue());
-				}
-			} else {
-				if (TAB_PANE.getTabs().contains(tab.getValue())) {
-					TAB_PANE.getTabs().remove(tab.getValue());
-				}
-			}
-		}
-
-		TAB_PANE.getTabs().subList(3, TAB_PANE.getTabs().size()).removeIf(T -> !TABS.values().contains(T));
+	/*
+	 * Getters
+	 */
+	public TabPane getRoot() {
+		return this.root;
 	}
 
-	public static boolean isOpen(String name) {
-		return TABS_OPEN.getOrDefault(name, false);
+	public TabFile getFileTab() {
+		return this.fileTab;
 	}
 
-	public static void toggle(String name) {
-		TABS_OPEN.put(name, !TABS_OPEN.getOrDefault(name, false));
+	public TabSettings getSettingsTab() {
+		return this.settingsTab;
+	}
 
-		Platform.runLater(() -> {
-			update();
-			TAB_FILE.updateContent();
-		});
+	public TabDetails getDetailsTab() {
+		return this.detailsTab;
+	}
+
+	public TabChart getChartTab() {
+		return this.chartTab;
 	}
 
 }

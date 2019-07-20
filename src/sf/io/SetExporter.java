@@ -10,6 +10,7 @@ import java.util.Objects;
 
 import javax.imageio.ImageIO;
 
+import app.DataManager;
 import app.Main;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.HPos;
@@ -22,7 +23,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
-import sf.DataManager;
 import sf.Player;
 import ui.util.FX;
 import ui.util.FXLabel;
@@ -36,11 +36,7 @@ public class SetExporter {
 
 		List<WritableImage> images = new ArrayList<>();
 
-		FileChooser chooser = new FileChooser();
-		chooser.setTitle("Save as");
-		chooser.setInitialFileName(name);
-		chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG file (*.png)", "*.png"));
-		File file = chooser.showSaveDialog(Main.STAGE);
+		File file = Main.createFileDialog("Save as", true, name, new FileChooser.ExtensionFilter("PNG file (*.png)", "*.png"));
 
 		if (file != null) {
 			for (int start = 0; start < players.size(); start += 50) {
@@ -67,11 +63,7 @@ public class SetExporter {
 	}
 
 	public static void asCSV(String name, boolean onlyMembers) {
-		FileChooser chooser = new FileChooser();
-		chooser.setTitle("Save as");
-		chooser.setInitialFileName(name);
-		chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV file (*.csv)", "*.csv"));
-		File file = chooser.showSaveDialog(Main.STAGE);
+		File file = Main.createFileDialog("Save as", true, name, new FileChooser.ExtensionFilter("CSV file (*.csv)", "*.csv"));
 
 		if (file != null) {
 			try (FileWriter fw = new FileWriter(file)) {

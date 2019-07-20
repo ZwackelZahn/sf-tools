@@ -1,19 +1,22 @@
-package ui;
+package app.tabs;
 
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
+import app.DataManager;
 import javafx.collections.FXCollections;
 import javafx.geometry.HPos;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.geometry.VPos;
-import javafx.scene.Node;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tab;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.FontWeight;
 import sf.Player;
 import ui.util.EntryContextMenu;
@@ -23,16 +26,59 @@ import ui.util.FXLabel;
 import ui.util.FXStyle;
 import util.Prefs;
 
-public class TabDetail extends Tab {
+public class TabDetails extends Tab {
 
-	public TabDetail(String name, List<Player> players) {
-		setText(String.format(name));
+	private String key;
+	private List<Player> players;
+
+	private VBox defaultRoot;
+
+	/*
+	 * Constructor
+	 */
+	public TabDetails() {
+		this.defaultRoot = new VBox(new FXLabel("Nothing here yet :(").font(25));
+		this.defaultRoot.setAlignment(Pos.CENTER);
+
+		setText("Browse players");
 		setStyle("accent_color: #FFE943; tab_text_color: #FFE943;");
-		setClosable(true);
-		setContent(createContent(name, players));
+
+		update();
 	}
 
-	private Node createContent(String name, List<Player> players) {
+	/*
+	 * Tab operations
+	 */
+	public String getSelectedKey() {
+		return this.key;
+	}
+
+	public void clearKey() {
+		this.key = null;
+		this.players = null;
+
+		update();
+	}
+
+	public void selectKey(String key) {
+		this.key = key;
+		this.players = DataManager.INSTANCE.getSet(key);
+
+		update();
+	}
+
+	/*
+	 * Content generation
+	 */
+	private void update() {
+		if (Objects.isNull(this.key)) {
+			setContent(this.defaultRoot);
+		} else {
+			createContent();
+		}
+	}
+
+	private void createContent() {
 		BorderPane root = new BorderPane();
 		GridPane grid = new GridPane();
 
@@ -46,14 +92,9 @@ public class TabDetail extends Tab {
 
 		root.setLeft(playerList);
 		root.setCenter(grid);
+		setContextMenu(new EntryContextMenu(key));
 
-		setOnSelectionChanged(E -> {
-			createSecondaryContent(grid, players.get(playerList.getSelectionModel().getSelectedIndex()));
-		});
-
-		setContextMenu(new EntryContextMenu(name));
-
-		return root;
+		setContent(root);
 	}
 
 	private void createSecondaryContent(GridPane root, Player p) {
