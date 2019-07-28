@@ -10,7 +10,7 @@ import javafx.application.Platform;
 import javafx.collections.MapChangeListener;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TabPane.TabClosingPolicy;
-import sf.Player;
+import sf.struct.Player;
 
 public enum TabManager {
 

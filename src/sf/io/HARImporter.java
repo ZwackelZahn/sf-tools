@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiPredicate;
@@ -21,8 +22,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import sf.Item;
-import sf.Player;
+import sf.struct.Item;
+import sf.struct.Player;
 import util.Constants;
 
 public class HARImporter {
@@ -59,7 +60,7 @@ public class HARImporter {
 
 		// Sorts player by guild position and level
 		List<Player> sorted = new ArrayList<>(players);
-		Collections.sort(sorted, Comparator.comparing((Player P) -> P.GuildRoleId).thenComparing(P -> -P.Level));
+		Collections.sort(sorted, Comparator.comparing((Player P) -> Objects.isNull(P.GuildRole) ? 5 : P.GuildRole).thenComparing(P -> -P.Level));
 
 		return sorted;
 	}
@@ -96,121 +97,163 @@ public class HARImporter {
 		root.iterator().forEachRemaining(E -> collect(collection, filter, "", E));
 	}
 
-	private static Player buildPlayer(String text, Map<String, Long[]> guild) {
-		Map<String, Object> data = new HashMap<>();
-		Map<String, String> sets = parse(text);
+	private static Item buildItem(List<Long> data) {
+		Item item = new Item();
 
-		String[] names = new String[] { null, null };
+		item.SlotID = data.get(0);
+		item.ItemID = data.get(1);
+		item.Rating1 = data.get(2);
+		item.Rating2 = data.get(3);
+		item.Attribute1Type = data.get(4);
+		item.Attribute2Type = data.get(5);
+		item.Attribute3Type = data.get(6);
+		item.Attribute1 = data.get(7);
+		item.Attribute2 = data.get(8);
+		item.Attribute3 = data.get(9);
+		item.Value = data.get(10) / 100L;
+		item.Gem = data.get(11);
+
+		return item;
+	}
+
+	private static Player buildPlayer(String text, Map<String, Long[]> guild) {
+		Player player = new Player();
+
+		Map<String, String> sets = parse(text);
 
 		sets.forEach((K, V) -> {
 			if (K.contains("groupname")) {
-				names[1] = V;
-				data.put("guild", V);
+				player.Guild = V;
 			} else if (K.contains("name")) {
-				names[0] = V;
-				data.put("name", V);
+				player.Name = V;
 			} else if (K.contains("unitlevel")) {
-				data.put("fortress_units", splitl(V, "/"));
+				List<Long> fortressUnits = splitl(V, "/");
+
+				player.FortressWall = fortressUnits.get(0);
+				player.FortressWarriors = fortressUnits.get(1);
+				player.FortressArchers = fortressUnits.get(2);
+				player.FortressMages = fortressUnits.get(3);
 			} else if (K.contains("achievement")) {
-				data.put("achievements_data", splitl(V, "/"));
+				List<Long> achievements = splitl(V, "/");
+				List<Long> stripped = achievements.subList(0, achievements.size() / 2);
+
+				player.Achievements = stripped.stream().filter(L -> L > 0).count();
 			} else if (K.contains("fortressrank")) {
-				data.put("rank_fortress", Long.parseLong(V));
+				player.RankFortress = Long.parseLong(V);
 			} else if (K.contains("playerlookat")) {
 				List<Long> values = splitl(V, "/");
 
-				data.put("xp_current", values.get(3));
-				data.put("xp_required", values.get(4));
-				data.put("rank_player_honor", values.get(5));
-				data.put("rank_player", values.get(6));
-				data.put("player_race", values.get(18) % 16);
-				data.put("player_sex", values.get(19) % 16);
-				data.put("player_class", values.get(20) % 16);
-				data.put("attr_strength", values.get(21) + values.get(26));
-				data.put("attr_dexterity", values.get(22) + values.get(27));
-				data.put("attr_intelligence", values.get(23) + values.get(28));
-				data.put("attr_constitution", values.get(24) + values.get(29));
-				data.put("attr_luck", values.get(25) + values.get(29));
-				data.put("item_head", new Item(values.subList(39, 51)));
-				data.put("item_body", new Item(values.subList(51, 63)));
-				data.put("item_hand", new Item(values.subList(63, 75)));
-				data.put("item_foot", new Item(values.subList(75, 87)));
-				data.put("item_neck", new Item(values.subList(87, 99)));
-				data.put("item_belt", new Item(values.subList(99, 111)));
-				data.put("item_ring", new Item(values.subList(111, 123)));
-				data.put("item_misc", new Item(values.subList(123, 135)));
-				data.put("item_wea1", new Item(values.subList(135, 147)));
-				data.put("item_wea2", new Item(values.subList(147, 159)));
-				data.put("mount", values.get(159) % 16);
-				data.put("xp_book", values.get(163) - 10000);
-				data.put("attr_armor", values.get(168));
-				data.put("xp_level", values.get(173));
-				data.put("potion_1", values.get(194));
-				data.put("potion_2", values.get(195));
-				data.put("potion_3", values.get(196));
-				data.put("potion_dur_1", values.get(200));
-				data.put("potion_dur_2", values.get(201));
-				data.put("potion_dur_3", values.get(202));
-				data.put("rank_fortress_honor", values.get(248));
-				data.put("fortress_upgrades", values.get(247));
-				data.put("fortress_knights", values.get(258));
+				player.XP = values.get(3);
+				player.XPNext = values.get(4);
+				player.Book = values.get(163) - 10000;
+				player.Level = values.get(173);
+
+				player.HonorPlayer = values.get(5);
+				player.RankPlayer = values.get(6);
+
+				player.Race = values.get(18) % 16;
+				player.Sex = values.get(19) % 16;
+				player.Class = values.get(20) % 16;
+
+				player.Strength = values.get(21) + values.get(26);
+				player.Dexterity = values.get(22) + values.get(27);
+				player.Intelligence = values.get(23) + values.get(28);
+				player.Constitution = values.get(24) + values.get(29);
+				player.Luck = values.get(25) + values.get(29);
+				player.Armor = values.get(168);
+
+				player.Head = buildItem(values.subList(39, 51));
+				player.Body = buildItem(values.subList(51, 63));
+				player.Hands = buildItem(values.subList(63, 75));
+				player.Feet = buildItem(values.subList(75, 87));
+				player.Neck = buildItem(values.subList(87, 99));
+				player.Belt = buildItem(values.subList(99, 111));
+				player.Ring = buildItem(values.subList(111, 123));
+				player.Misc = buildItem(values.subList(123, 135));
+
+				player.Weapon = buildItem(values.subList(135, 147));
+				player.WeaponSecondary = buildItem(values.subList(147, 159));
+
+				player.Mount = Constants.MOUNTS[(int) (values.get(159) % 16)];
+
+				player.Potion1 = values.get(194) == 16 ? 6 : values.get(194) == 0 ? 0 : (values.get(194) - 1) % 6;
+				player.Potion2 = values.get(195) == 16 ? 6 : values.get(195) == 0 ? 0 : (values.get(195) - 1) % 6;
+				player.Potion3 = values.get(196) == 16 ? 6 : values.get(196) == 0 ? 0 : (values.get(196) - 1) % 6;
+
+				player.PotionDuration1 = values.get(200);
+				player.PotionDuration2 = values.get(201);
+				player.PotionDuration3 = values.get(202);
+
+				player.HonorFortress = values.get(248);
+				player.FortressUpgrades = values.get(247);
+				player.FortressKnights = values.get(258);
 			} else if (K.contains("playerSave")) {
 				List<Long> values = splitl(V, "/");
 
-				data.put("xp_current", values.get(8));
-				data.put("xp_required", values.get(9));
-				data.put("rank_player_honor", values.get(10));
-				data.put("rank_player", values.get(11));
-				data.put("player_race", values.get(27) % 16);
-				data.put("player_sex", values.get(28) % 16);
-				data.put("player_class", values.get(29) % 16);
-				data.put("attr_strength", values.get(30) + values.get(35));
-				data.put("attr_dexterity", values.get(31) + values.get(36));
-				data.put("attr_intelligence", values.get(32) + values.get(37));
-				data.put("attr_constitution", values.get(33) + values.get(38));
-				data.put("attr_luck", values.get(34) + values.get(39));
-				data.put("item_head", new Item(values.subList(48, 60)));
-				data.put("item_body", new Item(values.subList(60, 72)));
-				data.put("item_hand", new Item(values.subList(72, 84)));
-				data.put("item_foot", new Item(values.subList(84, 96)));
-				data.put("item_neck", new Item(values.subList(96, 108)));
-				data.put("item_belt", new Item(values.subList(108, 120)));
-				data.put("item_ring", new Item(values.subList(120, 132)));
-				data.put("item_misc", new Item(values.subList(132, 144)));
-				data.put("item_wea1", new Item(values.subList(144, 156)));
-				data.put("item_wea2", new Item(values.subList(156, 168)));
-				data.put("mount", values.get(286) % 16);
-				data.put("xp_book", values.get(438) - 10000);
-				data.put("attr_armor", values.get(447));
-				data.put("xp_level", values.get(465));
-				data.put("potion_1", values.get(493));
-				data.put("potion_2", values.get(494));
-				data.put("potion_3", values.get(495));
-				data.put("potion_dur_1", values.get(499));
-				data.put("potion_dur_2", values.get(500));
-				data.put("potion_dur_3", values.get(501));
-				data.put("rank_fortress", values.get(583));
-				data.put("rank_fortress_honor", values.get(582));
-				data.put("fortress_upgrades", values.get(581));
-				data.put("fortress_knights", values.get(598));
+				player.XP = values.get(8);
+				player.XPNext = values.get(9);
+				player.Book = values.get(438) - 10000;
+				player.Level = values.get(465);
+
+				player.HonorPlayer = values.get(10);
+				player.RankPlayer = values.get(11);
+
+				player.Race = values.get(27) % 16;
+				player.Sex = values.get(28) % 16;
+				player.Class = values.get(29) % 16;
+
+				player.Strength = values.get(30) + values.get(35);
+				player.Dexterity = values.get(31) + values.get(36);
+				player.Intelligence = values.get(32) + values.get(37);
+				player.Constitution = values.get(33) + values.get(38);
+				player.Luck = values.get(34) + values.get(39);
+				player.Armor = values.get(447);
+
+				player.Head = buildItem(values.subList(48, 60));
+				player.Body = buildItem(values.subList(60, 72));
+				player.Hands = buildItem(values.subList(72, 84));
+				player.Feet = buildItem(values.subList(84, 96));
+				player.Neck = buildItem(values.subList(96, 108));
+				player.Belt = buildItem(values.subList(108, 120));
+				player.Ring = buildItem(values.subList(120, 132));
+				player.Misc = buildItem(values.subList(132, 144));
+
+				player.Weapon = buildItem(values.subList(144, 156));
+				player.WeaponSecondary = buildItem(values.subList(156, 168));
+
+				player.Mount = Constants.MOUNTS[(int) (values.get(286) % 16)];
+
+				player.Potion1 = values.get(493) == 16 ? 6 : values.get(493) == 0 ? 0 : (values.get(493) - 1) % 6;
+				player.Potion2 = values.get(494) == 16 ? 6 : values.get(494) == 0 ? 0 : (values.get(494) - 1) % 6;
+				player.Potion3 = values.get(495) == 16 ? 6 : values.get(495) == 0 ? 0 : (values.get(495) - 1) % 6;
+
+				player.PotionDuration1 = values.get(499);
+				player.PotionDuration2 = values.get(500);
+				player.PotionDuration3 = values.get(501);
+
+				player.RankFortress = values.get(583);
+				player.HonorFortress = values.get(582);
+				player.FortressUpgrades = values.get(581);
+				player.FortressKnights = values.get(598);
 			}
 		});
 
-		if (!guild.isEmpty() && guild.containsKey(names[0])) {
-			Long[] pg = guild.get(names[0]);
+		if (!guild.isEmpty() && guild.containsKey(player.Name)) {
+			Long[] pg = guild.get(player.Name);
 
 			if (pg[0] < 4) {
-				data.put("guild_role", pg[0]);
-				data.put("guild_treasure", pg[1]);
-				data.put("guild_instructor", pg[2]);
-				data.put("guild_pet", pg[3]);
+				player.GuildRole = pg[0];
+				player.GuildTreasure = pg[1];
+				player.GuildInstructor = pg[2];
+				player.GuildPet = pg[3];
 
-				if ((Long) data.get("fortress_knights") == 0L) {
-					data.put("fortress_knights", pg[4]);
+				if (Objects.isNull(player.FortressKnights)) {
+					player.FortressKnights = pg[4];
 				}
 			}
 		}
 
-		return new Player(data);
+		return player;
 	}
 
 }

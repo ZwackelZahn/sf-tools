@@ -14,9 +14,9 @@ import org.json.simple.parser.ParseException;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
-import sf.Player;
 import sf.io.HARImporter;
 import sf.io.SFPFileIO;
+import sf.struct.Player;
 
 public enum DataManager {
 

@@ -56,8 +56,7 @@ public class TabFile extends Tab {
 
 		new Thread(() -> {
 			DataManager.INSTANCE.loadArchive();
-			//TabManager.INSTANCE.getDetailsTab().selectKey(DataManager.INSTANCE.getLastKey());
-
+			
 			Platform.runLater(() -> {
 				root.getChildren().clear();
 

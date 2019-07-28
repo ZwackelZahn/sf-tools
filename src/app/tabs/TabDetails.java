@@ -18,12 +18,14 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.FontWeight;
-import sf.Player;
+import javafx.scene.text.TextAlignment;
+import sf.struct.Player;
 import ui.util.EntryContextMenu;
 import ui.util.FX;
 import ui.util.FXColor;
 import ui.util.FXLabel;
 import ui.util.FXStyle;
+import util.Constants;
 import util.Prefs;
 
 public class TabDetails extends Tab {
@@ -43,7 +45,7 @@ public class TabDetails extends Tab {
 		setText("Browse players");
 		setStyle("accent_color: #FFE943; tab_text_color: #FFE943;");
 
-		update();
+		setOnSelectionChanged(E -> update());
 	}
 
 	/*
@@ -138,6 +140,11 @@ public class TabDetails extends Tab {
 		FX.row(root, null, 5);
 
 		root.add(new FXLabel("%s (%d)", p.Name, p.Level).font(25), 0, 0, 11, 1);
+
+		FXLabel gearScore = new FXLabel("Gear Score: %d", p.getGearScore()).font(15).align(TextAlignment.LEFT);
+		GridPane.setHalignment(gearScore, HPos.CENTER);
+		root.add(gearScore, 8, 0, 3, 1);
+
 		root.add(new FXLabel(p.Guild).font(16), 0, 1, 11, 1);
 		root.add(FX.bar(1.0 * p.XP / p.XPNext, String.format("%s out of %s XP left to next level", FX.formatl(p.XPNext - p.XP), FX.formatl(p.XPNext))), 1, 2, 9, 1);
 
@@ -184,19 +191,19 @@ public class TabDetails extends Tab {
 
 		int pot = 0;
 		if (p.PotionDuration1 != 0) {
-			root.add(new FXLabel(p.Potion1), 3, 6 + pot);
+			root.add(new FXLabel(Constants.POTIONS[p.Potion1.intValue()]), 3, 6 + pot);
 			root.add(new FXLabel(MessageFormat.format("+{0}%", p.PotionDuration1)), 2, 6 + pot);
 			pot++;
 		}
 
 		if (p.PotionDuration2 != 0) {
-			root.add(new FXLabel(p.Potion2), 3, 6 + pot);
+			root.add(new FXLabel(Constants.POTIONS[p.Potion2.intValue()]), 3, 6 + pot);
 			root.add(new FXLabel(MessageFormat.format("+{0}%", p.PotionDuration2)), 2, 6 + pot);
 			pot++;
 		}
 
 		if (p.PotionDuration3 != 0) {
-			root.add(new FXLabel(p.Potion3), 3, 6 + pot);
+			root.add(new FXLabel(Constants.POTIONS[p.Potion3.intValue()]), 3, 6 + pot);
 			root.add(new FXLabel(MessageFormat.format("+{0}%", p.PotionDuration3)), 2, 6 + pot);
 			pot++;
 		}
@@ -207,7 +214,7 @@ public class TabDetails extends Tab {
 		root.add(new FXLabel(p.HonorFortress), 3, 13);
 
 		if (p.GuildRole != null) {
-			root.add(new FXLabel(p.GuildRole), 2, 16);
+			root.add(new FXLabel(Constants.GROUP_ROLES[p.GuildRole.intValue()]), 2, 16);
 			root.add(new FXLabel(p.GuildTreasure), 2, 18);
 			root.add(new FXLabel(p.GuildInstructor), 2, 19);
 			root.add(new FXLabel(p.GuildPet).style(FXStyle.textColor().setIf(FXColor.GREEN, true).setIf(FXColor.YELLOW, p.GuildPet < Prefs.PET1.val()).setIf(FXColor.ORANGE, p.GuildPet < Prefs.PET0.val()).get()), 4, 18);
@@ -219,7 +226,7 @@ public class TabDetails extends Tab {
 
 		FX.tip(bookBar, MessageFormat.format("{0} ({1}%) out of {2} items collected", p.Book, (int) (100D * p.Book.doubleValue() / 2160D), 2160));
 
-		ProgressBar achievementBar = FX.bar(p.Achievements.doubleValue() / p.AchievementsTotal.doubleValue(), String.format("%d out of %d achievements collected", p.Achievements, p.AchievementsTotal));
+		ProgressBar achievementBar = FX.bar(p.Achievements.doubleValue() / 70D, String.format("%d out of 70 achievements collected", p.Achievements));
 
 		root.add(bookBar, 7, 4, 3, 1);
 		root.add(achievementBar, 7, 5, 3, 1);

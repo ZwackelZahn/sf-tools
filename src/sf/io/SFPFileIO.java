@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import sf.Player;
+import sf.struct.Player;
 
 public class SFPFileIO {
 

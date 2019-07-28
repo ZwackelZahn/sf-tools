@@ -439,6 +439,9 @@ def join(data):
 		}
 	
 	for p in data:
+		if p['name'] not in out:
+			out[p['name']] = {}
+
 		o = out[p['name']]
 		
 		copyifn('xp', p, o)
@@ -450,10 +453,6 @@ def join(data):
 		copyifn('fortress', p, o)
 		copyifn('ranks', p, o)
 		copyifn('data', p, o)
-		
-	for p in list(out.keys()):
-		if out[p]['group']['role'] == 'invited':
-			del out[p]		
 	
 	return out
 	
