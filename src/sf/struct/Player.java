@@ -1,6 +1,9 @@
 package sf.struct;
 
 import java.io.Serializable;
+import java.util.Objects;
+
+import sf.struct.defs.Attribute;
 
 public class Player implements Serializable {
 
@@ -74,75 +77,44 @@ public class Player implements Serializable {
 	public Long getGearScore() {
 		Double score = 0D;
 
-		score += getItemScore(this.Head);
-		score += getItemScore(this.Body);
-		score += getItemScore(this.Hands);
-		score += getItemScore(this.Feet);
+		score += getGearScore(this.Head);
+		score += getGearScore(this.Body);
+		score += getGearScore(this.Hands);
+		score += getGearScore(this.Feet);
 
-		score += getItemScore(this.Neck);
-		score += getItemScore(this.Belt);
-		score += getItemScore(this.Ring);
-		score += getItemScore(this.Misc);
+		score += getGearScore(this.Neck);
+		score += getGearScore(this.Belt);
+		score += getGearScore(this.Ring);
+		score += getGearScore(this.Misc);
 
-		score += getWeaponScore(this.Weapon);
-
-		if (this.Class == 1 || this.Class == 4) {
-			score += getWeaponScore(this.WeaponSecondary);
-
-			score /= 10D;
-		} else {
-			score /= 9D;
-		}
-
-		return score.longValue();
+		return (long) (score / 8.0);
 	}
 
-	private Double getBaseScore(Item i) {
-		Double attr = i.Attribute1.doubleValue();
-		Double amod = 1.0;
-		Double cmod = 1.0;
+	private Long getGearScore(Item item) {
+		Long level = item.getApproximateLevel();
+		Long upgrades = item.getUpgradeCount();
 
-		if (i.Attribute1Type == 6) {
-			amod = 1.15;
-		} else if (i.Attribute3Type == 5) {
-			amod = 1.35;
+		Long gemType = item.getGemAttribute();
+
+		Double levelScore = level.doubleValue() / this.Level.doubleValue();
+		Double upgradeScore = upgrades.doubleValue() / 5.0;
+
+		Double gemScore = 0.0;
+		if (Objects.isNull(gemType)) {
+			gemScore = 0.0;
+		} else if (gemType == Attribute.ALL) {
+			gemScore = 1.0;
 		} else {
-			amod = 2.35;
-		}
-
-		if (i.Attribute1Type != 6) {
-			if (this.Class == 1 || this.Class >= 5) {
-				cmod = i.Attribute1Type == 1 ? 1.0 : 0.8;
-			} else if (this.Class >= 3) {
-				cmod = i.Attribute1Type == 2 ? 1.0 : 0.8;
+			if (this.Class == sf.struct.defs.Class.WARRIOR || this.Class == sf.struct.defs.Class.BATTLEMAGE || this.Class == sf.struct.defs.Class.BERSERKER) {
+				gemScore = gemType == Attribute.STRENGTH ? 1.0 : 0.5;
+			} else if (this.Class == sf.struct.defs.Class.SCOUT || this.Class == sf.struct.defs.Class.ASSASIN) {
+				gemScore = gemType == Attribute.DEXTERITY ? 1.0 : 0.5;
 			} else {
-				cmod = i.Attribute1Type == 3 ? 1.0 : 0.8;
+				gemScore = gemType == Attribute.INTELLIGENCE ? 1.0 : 0.5;
 			}
 		}
 
-		return (attr / (this.Level.doubleValue() * amod)) * cmod;
-	}
-
-	private Double getItemScore(Item i) {
-		if (i.ItemID == 0) {
-			return 0.0;
-		}
-
-		Double attrScore = getBaseScore(i);
-		Double armorScore = 1.0;
-
-		return 100.0 * armorScore * attrScore;
-	}
-
-	private Double getWeaponScore(Item i) {
-		if (i.ItemID == 0) {
-			return 0.0;
-		}
-
-		Double attrScore = getBaseScore(i);
-		Double damageScore = 1.0;
-
-		return 100.0 * damageScore * attrScore;
+		return (long) (80.0 * levelScore + 10.0 * upgradeScore + 10.0 * gemScore);
 	}
 
 	/*

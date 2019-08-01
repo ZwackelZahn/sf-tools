@@ -101,7 +101,7 @@ public class SetExporter {
 		FX.cola(root, HPos.CENTER, 1);
 
 		FX.cola(root, HPos.CENTER, 64);
-		FX.cola(root, HPos.CENTER, 64);
+		FX.cola(root, HPos.CENTER, 88);
 
 		FX.cola(root, HPos.CENTER, 72);
 		FX.cola(root, HPos.CENTER, 56);
@@ -256,8 +256,8 @@ public class SetExporter {
 			}
 		}
 
-		WritableImage image = new WritableImage(816, 912);
-		new Scene(root, 816, 912);
+		WritableImage image = new WritableImage(840, 912);
+		new Scene(root, 840, 912);
 		root.snapshot(null, image);
 
 		return image;

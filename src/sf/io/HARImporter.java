@@ -100,18 +100,25 @@ public class HARImporter {
 	private static Item buildItem(List<Long> data) {
 		Item item = new Item();
 
-		item.SlotID = data.get(0);
+		item.SlotID = data.get(0) % 16;
 		item.ItemID = data.get(1);
 		item.Rating1 = data.get(2);
 		item.Rating2 = data.get(3);
 		item.Attribute1Type = data.get(4);
 		item.Attribute2Type = data.get(5);
 		item.Attribute3Type = data.get(6);
+
 		item.Attribute1 = data.get(7);
-		item.Attribute2 = data.get(8);
-		item.Attribute3 = data.get(9);
+
+		if (item.Attribute1Type == 6) {
+			item.Attribute3 = item.Attribute2 = item.Attribute1;
+		} else {
+			item.Attribute2 = data.get(8);
+			item.Attribute3 = data.get(9);
+		}
+
 		item.Value = data.get(10) / 100L;
-		item.Gem = data.get(11);
+		item.Mods = data.get(11);
 
 		return item;
 	}

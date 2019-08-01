@@ -391,6 +391,8 @@ def process(kv, out):
 	
 	if kv.startswith(SF_OTHERPLAYER_CHECK):
 		for val in kv.split('&'):
+			if 'chathistory' in val:
+				continue
 			processOther(val, player)
 		
 		out.append(player)

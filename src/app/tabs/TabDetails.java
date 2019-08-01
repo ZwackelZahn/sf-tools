@@ -18,7 +18,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.FontWeight;
-import javafx.scene.text.TextAlignment;
 import sf.struct.Player;
 import ui.util.EntryContextMenu;
 import ui.util.FX;
@@ -141,8 +140,8 @@ public class TabDetails extends Tab {
 
 		root.add(new FXLabel("%s (%d)", p.Name, p.Level).font(25), 0, 0, 11, 1);
 
-		FXLabel gearScore = new FXLabel("Gear Score: %d", p.getGearScore()).font(15).align(TextAlignment.LEFT);
-		GridPane.setHalignment(gearScore, HPos.CENTER);
+		FXLabel gearScore = new FXLabel("\u2605 %d", p.getGearScore()).font(15);
+		GridPane.setHalignment(gearScore, HPos.LEFT);
 		root.add(gearScore, 8, 0, 3, 1);
 
 		root.add(new FXLabel(p.Guild).font(16), 0, 1, 11, 1);
