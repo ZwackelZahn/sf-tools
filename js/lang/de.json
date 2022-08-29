@@ -84,11 +84,11 @@
         },
         "fights": {
             "title": "Kampf Betrachter",
-            "desc": "Zeigt alle PvP-Kämpfe an die in einer Archivdatei gespeichert sind."
+            "desc": "Zeigt alle PvP-Kämpfe an, die in einer Archivdatei gespeichert sind."
         },
         "digest": {
             "title": "Boss Betrachter",
-            "desc": "Zeigt alle PvE-Kämpfe an die in einer Archivdatei gespeichert sind."
+            "desc": "Zeigt alle PvE-Kämpfe an, die in einer Archivdatei gespeichert sind."
         },
         "atts": {
             "title": "Gold & Erfahrung",
@@ -105,7 +105,7 @@
     },
     "404": {
         "title": "404",
-        "text": "Ich bin nicht sicher, wonach Sie suchen, aber es existiert nicht."
+        "text": "Ich bin nicht sicher wonach Sie suchen, aber es existiert nicht."
     },
     "dungeons": {
         "simulate": "Simulieren",
@@ -125,7 +125,7 @@
         "results": "Ergebnisse",
         "cheats": {
             "title": "Cheat Menü",
-            "subtitle": "Wähle aus, welche Cheats du anwenden willst, und lade deinen Charakter neu",
+            "subtitle": "Wähle aus, welche Cheats du anwenden willst und lade deinen Charakter neu",
             "enable": "Erlaube Cheats",
             "general": "Generell",
             "enchantments": "Alle Verzauberungen",
@@ -138,7 +138,7 @@
     },
     "simulator": {
         "paste_target#": "Clicke hier und drücke <b>STRG&nbsp;+&nbsp;V</b> um in den Simulator zu kopieren",
-        "threads": "Simuliere threads. Schauen Sie das diese Nummer kleiner ist, als die Anzahl Prozessorkerne die Sie besitzen!",
+        "threads": "Simuliere threads. Schaue, dass diese Nummer kleiner ist, als die Anzahl Prozessorkerne die Du besitzt!",
         "iterations": "Anzahl Wiederholungen pro thread.",
         "save_image": "Speichern als Bild"
     },
